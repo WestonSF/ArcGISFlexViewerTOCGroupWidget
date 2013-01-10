@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TOC:ResizeTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx" 
+					   xmlns:TOC="widgets.TOC.*" 
+					   width="400" height="300"
+					   title="{_detailsTitle}"
+					   close="closeMe()"  
+					   cornerRadius="6"
+					   skinClass="widgets.TOC.ResizeTitleWindowSkin"
+					   initialize="resizetitlewindow1_initializeHandler(event)"
+					   creationComplete="addLinkHandler(event)">
+	<TOC:layout>
+		<s:VerticalLayout horizontalAlign="center" verticalAlign="middle" />
+	</TOC:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.conversion.TextConverter;
+			import flashx.textLayout.elements.Configuration;
+			import flashx.textLayout.events.FlowElementMouseEvent;
+			import flashx.textLayout.formats.TextDecoration;
+			import flashx.textLayout.formats.TextLayoutFormat;
+			
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			[Bindable] private var _content:String;
+			
+			[Bindable] private var _detailsTitle:String;
+			
+			[Bindable] private var textLayoutConfiguration:Configuration;
+			
+			private function closeMe():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function set windowDetails(value:String):void
+			{
+				_content = value;
+			}
+			
+			public function set detailsTitle(value:String):void
+			{
+				_detailsTitle = value;
+			}
+			
+			protected function resizetitlewindow1_initializeHandler(event:FlexEvent):void
+			{
+				textLayoutConfiguration = new Configuration();
+				var textLayoutFormat:TextLayoutFormat = new TextLayoutFormat();
+				textLayoutFormat.color = getStyle("linkActiveColor")
+				textLayoutFormat.textDecoration = TextDecoration.UNDERLINE;
+				textLayoutConfiguration.defaultLinkActiveFormat = textLayoutFormat;
+				textLayoutFormat = new TextLayoutFormat();
+				textLayoutFormat.color = getStyle("linkHoverColor")
+				textLayoutFormat.textDecoration = TextDecoration.UNDERLINE;
+				textLayoutConfiguration.defaultLinkHoverFormat = textLayoutFormat;
+				textLayoutFormat = new TextLayoutFormat();
+				textLayoutFormat.color = getStyle("linkNormalColor")
+				textLayoutFormat.textDecoration = TextDecoration.UNDERLINE;
+				textLayoutConfiguration.defaultLinkNormalFormat = textLayoutFormat;
+			}
+			
+			protected function addLinkHandler(event:Event):void
+			{
+				ret.textFlow.addEventListener(FlowElementMouseEvent.CLICK, onLinkHandler);
+			}
+			
+			protected function onLinkHandler(event:FlowElementMouseEvent):void
+			{
+				closeMe();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Scroller width="100%" height="100%"
+				hasFocusableChildren="false"
+				measuredSizeIncludesScrollBars="false"
+				minViewportInset="1">
+		<s:RichEditableText editable="false" id="ret" 
+							paddingLeft="5"
+							paddingRight="5"
+							paddingTop="10"
+							backgroundAlpha="{getStyle('backgroundAlpha')}"
+						 	backgroundColor="{getStyle('backgroundColor')}"
+							textFlow="{TextConverter.importToFlow(_content, TextConverter.TEXT_FIELD_HTML_FORMAT, textLayoutConfiguration)}"/>
+	</s:Scroller>
+	<TOC:controlBarContent>
+	</TOC:controlBarContent>
+	<TOC:controlBarLayout>
+		<s:HorizontalLayout horizontalAlign="right" paddingTop="3" paddingBottom="2" paddingRight="5" clipAndEnableScrolling="true" />
+	</TOC:controlBarLayout>
+</TOC:ResizeTitleWindow>
