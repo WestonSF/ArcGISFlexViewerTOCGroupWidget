@@ -11,6 +11,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 package widgets.TOC.toc.tocClasses
 {	
+	import com.esri.ags.geometry.Extent;
+	
 	import flash.events.EventDispatcher;
 	
 	import mx.collections.ArrayCollection;
@@ -148,35 +150,6 @@ package widgets.TOC.toc.tocClasses
 	        // Dispatch a property change event to notify the item renderer
 	        dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "label", oldValue, _label));
 	    }
-		
-		//--------------------------------------------------------------------------
-		//  Property:  toc position
-		//--------------------------------------------------------------------------
-		
-		internal static const DEFAULT_POSITION:int = 0;
-		
-		private var _position:int = DEFAULT_POSITION;
-		
-		[Bindable("propertyChange")]
-		/**
-		 * The toc items position.
-		 */
-		public function get position():int
-		{
-			return _position;
-		}
-		
-		/**
-		 * @private
-		 */
-		public function set position(value:int):void
-		{
-			var oldValue:Object = _position;
-			_position = (value ? value : DEFAULT_POSITION);
-			
-			// Dispatch a property change event to notify the item renderer
-			dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "position", oldValue, _position));
-		}
 	
 	    //--------------------------------------------------------------------------
 	    //  Property:  visible
@@ -212,6 +185,8 @@ package widgets.TOC.toc.tocClasses
 	        {
 	            var oldValue:Object = _visible;
 	            _visible = value;
+				
+				updateScaledependantState();
 	
 	            if (layerRefresh)
 	            {
@@ -222,6 +197,45 @@ package widgets.TOC.toc.tocClasses
 	            dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "visible", oldValue, value));
 	        }
 	    }
+		
+		internal static const DEFAULT_IS_IN_SCALE_RANGE:Boolean = true;
+		
+		private var _isInScaleRange:Boolean = DEFAULT_IS_IN_SCALE_RANGE;
+		
+		[Bindable("propertyChange")]
+		/**
+		 * Whether the map layer referred to by this TOC item is enabled or not.
+		 */
+		public function get isInScaleRange():Boolean
+		{
+			return _isInScaleRange;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set isInScaleRange(value:Boolean):void
+		{
+			setIsInScaleRange(value, true);
+		}
+		
+		/**
+		 * Allows subclasses to change the isInScaleRange state without causing a layer refresh.
+		 */
+		internal function setIsInScaleRange(value:Boolean, layerRefresh:Boolean = true):void
+		{
+			if (value != _isInScaleRange){
+				var oldValue:Object = _isInScaleRange;
+				_isInScaleRange = value;
+				updateScaledependantState();
+				if (layerRefresh){
+					refreshLayer();
+				}
+				
+				// Dispatch a property change event to notify the item renderer
+				dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "isInScaleRange", oldValue, value));
+			}
+		}
 	
 	    private function setVisibleDirect(value:Boolean):void
 	    {
@@ -242,7 +256,6 @@ package widgets.TOC.toc.tocClasses
 		internal static const DEFAULT_STATE:Boolean = false;
 		
 		private var _collapsed:Boolean = DEFAULT_STATE;
-		
 		[Bindable("propertyChange")]
 		/**
 		 * Whether the visibility of this TOC item is in a mixed state,
@@ -265,36 +278,57 @@ package widgets.TOC.toc.tocClasses
 				dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "collapsed", oldValue, value));
 			}
 		}
-	
+		
 		//--------------------------------------------------------------------------
-		//  Property:  scaledependant
+		//  Property:  maxScale
 		//--------------------------------------------------------------------------
 		
-		internal static const DEFAULT_SCALEDEPENDANT:Boolean = false;
+		internal static const DEFAULT_MAX:Number = 0;
 		
-		private var _scaledependant:Boolean = DEFAULT_SCALEDEPENDANT;
+		private var _maxScale:Number = DEFAULT_MAX;
 		
-		[Bindable("propertyChange")]
-		/**
-		 * Whether the visibility of this TOC item is in a mixed state,
-		 * based on child item visibility or other criteria.
-		 */
-		public function get scaledependant():Boolean
+		public function set maxScale( value:Number ):void
 		{
-			return _scaledependant;
+			_maxScale = value;
 		}
-		/**
-		 * @private
-		 */
-		public function set scaledependant( value:Boolean ):void
+		
+		public function get maxScale():Number
 		{
-			if (value != _scaledependant) {
-				var oldValue:Object = _scaledependant;
-				_scaledependant = value;
-				
-				// Dispatch a property change event to notify the item renderer
-				dispatchEvent(PropertyChangeEvent.createUpdateEvent(this, "scaledependant", oldValue, value));
-			}
+			return _maxScale;
+		}
+		
+		//--------------------------------------------------------------------------
+		//  Property:  minScale
+		//--------------------------------------------------------------------------
+		internal static const DEFAULT_MIN:Number = 0;
+		
+		private var _minScale:Number = DEFAULT_MIN;
+		
+		public function set minScale( value:Number ):void
+		{
+			_minScale = value;
+		}
+		
+		public function get minScale():Number
+		{
+			return _minScale;
+		}
+		
+		//--------------------------------------------------------------------------
+		//  Property:  layerExtent
+		//--------------------------------------------------------------------------
+		internal static const DEFAULT_EXT:Extent = new Extent();
+		
+		private var _layerExtent:Extent = DEFAULT_EXT;
+		
+		public function set layerExtent( value:Extent ):void
+		{
+			_layerExtent = value;
+		}
+		
+		public function get layerExtent():Extent
+		{
+			return _layerExtent;
 		}
 		
 		//--------------------------------------------------------------------------
@@ -342,6 +376,17 @@ package widgets.TOC.toc.tocClasses
 	            parent.refreshLayer();
 	        }
 	    }
+		
+		/**
+		 * Updates the Scaledependant state of this TOC item.
+		 */
+		internal function updateScaledependantState(calledFromChild:Boolean = false):void
+		{
+			// Recurse up the tree
+			if (parent){
+				parent.updateScaledependantState(true);
+			}
+		}
 	
 	    override public function toString():String
 	    {

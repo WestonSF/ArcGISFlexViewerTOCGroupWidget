@@ -188,15 +188,17 @@ package widgets.TOC.toc
 		override protected function mouseOverHandler(event:MouseEvent):void 
 		{
 			var item:TocItem = mouseEventToItemRenderer(event).data as TocItem;
-			if (item != null && item.label != "dummy") 
+			if (item != null && item.label != "dummy") {
 				super.mouseOverHandler(event);
+			}
 		}
 		
 		override protected function mouseDownHandler(event:MouseEvent):void 
 		{
 			var item:TocItem = mouseEventToItemRenderer(event).data as TocItem;
-			if (item != null && item.label != "dummy") 
+			if (item != null && item.label != "dummy") {
 				super.mouseDownHandler(event);
+			}
 		}
 	
 	    public function set isMapServiceOnly(value:Boolean):void
@@ -568,8 +570,9 @@ package widgets.TOC.toc
 	    private function registerMapLayer(layer:Layer):void
 	    {
 			if(layer.name != "dummy"){
-		        if (filterOutSubLayer(layer))
+		        if (filterOutSubLayer(layer)){
 		            return;
+				}
 			}
 			lLoader.visible = lLoader.includeInLayout = true;
 			numOfLayers += 1;
@@ -579,19 +582,15 @@ package widgets.TOC.toc
 			}
 	
 	        // Init any layer properties, styles, and effects
-	        if (useLayerFadeEffect)
+	        if (useLayerFadeEffect){
 	            setLayerFadeEffect(layer);
+			}
 	
 	        // Add a new top-level TOC item at the beginning of the list (reverse rendering order)
 	        const tocItem:TocMapLayerItem = new TocMapLayerItem(layer, _labelFunction, _isMapServiceOnly, _excludeLayers, _legendCollapsed, _metadataToolTip, _disableZoomTo);
 			
 			tocItem.scroller = _scroller;
 			tocItem.tocMinWidth = _tocMinWidth;
-			if(layer.name == "dummy"){
-				tocItem.position = int.MAX_VALUE;
-			}else{
-				tocItem.position = order++;
-			}
 			
 			var ready:Boolean = true;
 			if (layer is ArcGISTiledMapServiceLayer) {
@@ -660,14 +659,16 @@ package widgets.TOC.toc
 	
 	    private function addLayerFilterListeners(filter:ArrayCollection):void
 	    {
-	        if (filter)
+	        if (filter){
 	            filter.addEventListener(CollectionEvent.COLLECTION_CHANGE, onFilterChange, false, 0, true);
+			}
 	    }
 	
 	    private function removeLayerFilterListeners(filter:ArrayCollection):void
 	    {
-	        if (filter)
+	        if (filter){
 	            filter.removeEventListener(CollectionEvent.COLLECTION_CHANGE, onFilterChange);
+			}
 	    }
 	
 	    private function onFilterChange(event:CollectionEvent = null):void
@@ -702,10 +703,12 @@ package widgets.TOC.toc
 		private function filterOutSubLayer(layer:Layer, id:int = -1):Boolean
 		{
 			var exclude:Boolean = false;
-			if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer))
+			if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer)){
 				exclude = true;
-			if (layer.name.indexOf("hiddenLayer_") != -1)
+			}
+			if (layer.name.indexOf("hiddenLayer_") != -1){
 				exclude = true;
+			}
 			if (!exclude && excludeLayers) {
 				exclude = false;
 				for each (var item:* in excludeLayers) {
@@ -725,10 +728,12 @@ package widgets.TOC.toc
 	    private function filterOutLayer(layer:Layer):Boolean
 	    {
 	        var exclude:Boolean = false;
-	        if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer))
+	        if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer)){
 	            exclude = true;
-			if (layer.name.indexOf("hiddenLayer_") != -1)
+			}
+			if (layer.name.indexOf("hiddenLayer_") != -1){
 				exclude = true;
+			}
 	        if (!exclude && excludeLayers){
 	            exclude = false;
 	            for each (var item:* in excludeLayers){
@@ -750,20 +755,22 @@ package widgets.TOC.toc
 	        return exclude;
 	    }
 	
-	    private function normalizeLayerFilter(value:Object):ArrayCollection
-	    {
-	        var filter:ArrayCollection;
-	        if (value is ArrayCollection)
-	            filter = value as ArrayCollection;
-	        else if (value is Array)
-	            filter = new ArrayCollection(value as Array);
-	        else if (value is String || value is Layer)// Possibly a String (layer id) or Layer object
-	            filter = new ArrayCollection([ value ]);
-	        else// Unsupported value type
-	            filter = null;
-
-	        return filter;
-	    }
+		private function normalizeLayerFilter(value:Object):ArrayCollection
+		{
+			var filter:ArrayCollection;
+			if (value is ArrayCollection){
+				filter = value as ArrayCollection;
+			}else if (value is Array){
+				filter = new ArrayCollection(value as Array);
+			}else if (value is String || value is Layer){
+				// Possibly a String (layer id) or Layer object
+				filter = new ArrayCollection([ value ]);
+			}else{
+				// Unsupported value type
+				filter = null;
+			}
+			return filter;
+		}
 	
 	    /**
 	     * Double click handler for expanding or collapsing a tree branch.
@@ -818,11 +825,20 @@ package widgets.TOC.toc
 		private function legendDataLoadedHandler2(event:Event):void
 		{
 			_tocRoots.refresh();
+			var OpenItems:Object = openItems;
+			dataProvider = _tocRoots;
+			openItems = OpenItems;
+		}
+		
+		override protected function mouseWheelHandler(event:MouseEvent):void
+		{
+			event.delta = (event.delta > 0) ? 1:-1;
+			super.mouseWheelHandler(event);
 		}
 		
 		private function legendDataLoadedHandler(event:Event):void
 		{
-			_tocRoots.refresh();
+			//_tocRoots.refresh();
 			
 			numOfLayers -= 1;
 			if (numOfLayers <= 0){
@@ -842,6 +858,10 @@ package widgets.TOC.toc
 						}
 					}
 				}
+				_tocRoots.refresh();
+				var OpenItems:Object = openItems;
+				dataProvider = _tocRoots;
+				openItems = OpenItems;
 			}
 		}
 	}

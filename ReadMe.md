@@ -1,6 +1,13 @@
 This is my TOC/Legend widget for Flex Viewer 3.x
 Initial Release: 12-1-2010
 
+Version 3.1.3 - Dec 24, 2012
+* A big re-write of this widgets code base.
+* Improved mousewheel scrolling speed
+* Added partial/Beta Support for token Security. If you have a token in the url or in the main config.xml
+  then the widget will use it. This widget does not yet support Idenity Manager supplied tokens.
+* Fixed Bug when using this widget and the OTB esri Legend widget with a scale dependant layer.
+
 Version 3.1.2 - Dec 24, 2012
 * Fixed issue with FeatureLayers not showing in the TOC.
 * Fixed rare bug where a unique value renderer is used and only one classs is specified.

@@ -22,10 +22,9 @@
 	</labels>
 	<tocsettings>
 		<expanded everything="false">false</expanded>
-		<collapselegends>true</collapselegends>
+		<collapselegends>false</collapselegends>
 		<disablezoomtomenuoption>false</disablezoomtomenuoption>
 	</tocsettings>
-	<legendtimeout>60</legendtimeout>
 	<excludelayers>
 		<!-- <excludelayer mapservice="Symbols"></excludelayer>
 		<excludelayer mapservice="Utilities"></excludelayer> -->

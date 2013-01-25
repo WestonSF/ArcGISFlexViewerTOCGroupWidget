@@ -28,6 +28,7 @@ package widgets.TOC.toc.controls
 			setStyle("scaledependant", _scaledependant);
 			setStyle("themeColor", FlexGlobals.topLevelApplication.getStyle("accentColor"));
 			setStyle("iconColor", FlexGlobals.topLevelApplication.getStyle("accentColor"));
+			setStyle("layoutDirection", "ltr"); // fix check mark's direction - https://bugs.adobe.com/jira/browse/SDK-25817
 		}
 		
 		//--------------------------------------------------------------------------
