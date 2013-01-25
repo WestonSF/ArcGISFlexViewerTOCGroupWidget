@@ -12,6 +12,8 @@
 package widgets.TOC.toc.tocClasses
 {
 	import com.esri.ags.Map;
+	import com.esri.ags.components.IdentityManager;
+	import com.esri.ags.components.supportClasses.Credential;
 	import com.esri.ags.events.DetailsEvent;
 	import com.esri.ags.events.ExtentEvent;
 	import com.esri.ags.events.LayerEvent;
@@ -339,6 +341,7 @@ package widgets.TOC.toc.tocClasses
 			var lname:String;
 			var lInfos:Array;
 			var tURL:String;
+			var pObj:Object = new Object();
 			if (m_layer is ArcGISTiledMapServiceLayer){
 				if(m_layer.version >= 10.01){
 					tURL = ArcGISTiledMapServiceLayer(m_layer).url;
@@ -356,7 +359,22 @@ package widgets.TOC.toc.tocClasses
 					httpServ.resultFormat = "text";
 					lname = ArcGISTiledMapServiceLayer(m_layer).id;
 					lInfos = ArcGISTiledMapServiceLayer(m_layer).layerInfos;
-					httpServ.addEventListener(ResultEvent.RESULT,function(event:ResultEvent):void{processLegend(event,lname,Number.NaN,lInfos,httpServ.url)});
+					httpServ.addEventListener(ResultEvent.RESULT,
+						function(event:ResultEvent):void{
+							if(event.result == '{"error":{"code":499,"message":"Token Required","details":[]}}' && IdentityManager.instance.enabled){
+								var cred:Credential = IdentityManager.instance.findCredential(tURL);
+								pObj.layer = m_layer;
+								pObj.servid = Number.NaN;
+								if(!cred){
+									IdentityManager.instance.getCredential(tURL, true, new AsyncResponder(reprocessLegendwToken, function(evt:Event):void{}, pObj));
+								}else{
+									reprocessLegendwToken(cred, pObj);
+								}
+							}else{
+								processLegend(event,lname,Number.NaN,lInfos,httpServ.url);
+							}
+						}
+					);
 					httpServ.send();
 				}else{
 					lname = ArcGISTiledMapServiceLayer(m_layer).id;
@@ -381,7 +399,23 @@ package widgets.TOC.toc.tocClasses
 					httpServ.resultFormat = "text";
 					lname = ArcGISDynamicMapServiceLayer(m_layer).id;
 					lInfos = ArcGISDynamicMapServiceLayer(m_layer).layerInfos
-					httpServ.addEventListener(ResultEvent.RESULT,function(event:ResultEvent):void{processLegend(event,lname,Number.NaN,lInfos,httpServ.url)});
+					httpServ.addEventListener(ResultEvent.RESULT,
+						function(event:ResultEvent):void
+						{
+							if(event.result == '{"error":{"code":499,"message":"Token Required","details":[]}}' && IdentityManager.instance.enabled){
+								var cred:Credential = IdentityManager.instance.findCredential(tURL);
+								pObj.layer = m_layer;
+								pObj.servid = Number.NaN;
+								if(!cred){
+									IdentityManager.instance.getCredential(tURL, true, new AsyncResponder(reprocessLegendwToken, function(evt:Event):void{}, pObj));
+								}else{
+									reprocessLegendwToken(cred, pObj);
+								}
+							}else{
+								processLegend(event,lname,Number.NaN,lInfos,httpServ.url);
+							}
+						}
+					);
 					httpServ.send();
 				}else{
 					lname = ArcGISDynamicMapServiceLayer(m_layer).id;
@@ -424,8 +458,17 @@ package widgets.TOC.toc.tocClasses
 							//This might be a organizational FeatureServer Service
 							if(event.result == '{"error":{"code":400,"message":"Invalid URL","details":["Invalid URL"]}}'){
 								getFeatureResult(m_layer.layerDetails, lname);
-							}else if(event.result == '{"error":{"code":499,"message":"Token Required","details":[]}}'){
-								getFeatureResult(m_layer.layerDetails, lname);
+							}else if(event.result == '{"error":{"code":499,"message":"Token Required","details":[]}}' && IdentityManager.instance.enabled){
+								//getFeatureResult(m_layer.layerDetails, lname);
+								var cred:Credential = IdentityManager.instance.findCredential(tURL);
+								pObj.layer = m_layer;
+								pObj.servid = FeatServId;
+								if(!cred){
+									
+									IdentityManager.instance.getCredential(tURL, true, new AsyncResponder(reprocessLegendwToken, function(evt:Event):void{}, pObj));
+								}else{
+									reprocessLegendwToken(cred, pObj);
+								}
 							}else{
 								processLegend(event,lname,FeatServId);
 							}
@@ -438,6 +481,38 @@ package widgets.TOC.toc.tocClasses
 			}else{
 				FlexGlobals.topLevelApplication.dispatchEvent(new Event("legendDataLoaded$"));
 			}
+		}
+		
+		private function reprocessLegendwToken(cred:Credential, token:Object):void
+		{
+			var m_layer:Object = token.layer;
+			var FeatServId:Number = token.servid;
+			var lname:String;
+			var lInfos:Array;
+			var httpServ:HTTPService = new HTTPService();
+			httpServ.resultFormat = "text";
+			
+			if(m_layer is ArcGISTiledMapServiceLayer){
+				lname = ArcGISTiledMapServiceLayer(m_layer).id;
+				lInfos = ArcGISTiledMapServiceLayer(m_layer).layerInfos;
+				httpServ.url = ArcGISTiledMapServiceLayer(m_layer).url + "/legend?f=json&token=" + cred.token;
+			}else if(m_layer is ArcGISDynamicMapServiceLayer){
+				lname = ArcGISDynamicMapServiceLayer(m_layer).id;
+				lInfos = ArcGISDynamicMapServiceLayer(m_layer).layerInfos;
+				httpServ.url = ArcGISDynamicMapServiceLayer(m_layer).url + "/legend?f=json&token=" + cred.token;
+			}else if(m_layer is FeatureLayer){
+				lname = FeatureLayer(m_layer).id;
+				lInfos = null;
+				var msName:String = FeatureLayer(m_layer).url.replace("FeatureServer","MapServer");
+				httpServ.url = msName.substring(0,msName.lastIndexOf("/")) + "/legend?f=json&token=" + cred.token;
+			}
+			
+			httpServ.addEventListener(ResultEvent.RESULT,
+				function(event:ResultEvent):void{
+					processLegend(event,lname,FeatServId,lInfos,httpServ.url);
+				}
+			);
+			httpServ.send();
 		}
 		
 		private var timeOutVar:uint;

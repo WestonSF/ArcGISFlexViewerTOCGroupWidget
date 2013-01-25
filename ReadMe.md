@@ -1,7 +1,10 @@
 This is my TOC/Legend widget for Flex Viewer 3.x
 Initial Release: 12-1-2010
 
-Version 3.1.3 - Dec 24, 2012
+Version 3.1.4 - Jan 25, 2013
+* Added IdentityManager token support for Secure Services.
+
+Version 3.1.3 - Jan 24, 2013
 * A big re-write of this widgets code base.
 * Improved mousewheel scrolling speed
 * Added partial/Beta Support for token Security. If you have a token in the url or in the main config.xml

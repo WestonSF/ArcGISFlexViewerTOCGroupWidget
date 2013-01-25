@@ -25,8 +25,8 @@
 			import widgets.TOC.toc.tocClasses.LegendSymbolItem;
 			
 			//Build Constants
-			protected const VERSION:String = "3.1.3";
-			protected const BUILDDATE:String = "1/24/2013";
+			protected const VERSION:String = "3.1.4";
+			protected const BUILDDATE:String = "1/25/2013";
 			
 			//Resources
 			[Embed(source="assets/images/i_about.png")]
