@@ -2,7 +2,7 @@
 package widgets.TOC.toc.tocClasses
 {	
 	import flash.events.EventDispatcher;
-	import spark.components.Image;
+	import mx.controls.Image;
 
 	[Bindable]
 	[RemoteClass(alias="widgets.TOC.toc.tocClasses.LegendDataClassItem")]

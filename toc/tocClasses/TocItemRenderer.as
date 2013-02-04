@@ -23,14 +23,25 @@ package widgets.TOC.toc.tocClasses
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	
+	import mx.containers.VBox;
+	import mx.controls.Alert;
+	import mx.controls.Image;
 	import mx.controls.treeClasses.TreeItemRenderer;
 	import mx.controls.treeClasses.TreeListData;
 	import mx.core.FlexGlobals;
+	import mx.core.UIComponent;
+	import mx.core.mx_internal;
+	import mx.events.FlexEvent;
+	import mx.managers.PopUpManager;
+	import mx.managers.PopUpManagerChildList;
 	
 	import spark.components.Group;
-	import spark.components.Image;
+	import spark.components.HSlider;
 	import spark.components.VGroup;
+	import spark.layouts.VerticalLayout;
+	import spark.primitives.BitmapImage;
 	
+	import widgets.TOC.DetailsWindow;
 	import widgets.TOC.toc.TOC;
 	import widgets.TOC.toc.controls.CheckBoxScaleDependant;
 	
@@ -42,7 +53,7 @@ package widgets.TOC.toc.tocClasses
 	    // Renderer UI components
 		private var _checkbox:CheckBoxScaleDependant;
 		
-		private var _vGroup:VGroup;
+		private var _vbox:VBox;
 		
 		private var _btn:Image;
 		
@@ -56,15 +67,18 @@ package widgets.TOC.toc.tocClasses
 	    private static const POST_CHECKBOX_GAP:Number = 4;
 		
 		[Embed(source="widgets/TOC/assets/images/plus.png")]
-		[Bindable] private var _Expand:Class;
+		[Bindable]
+		private var _Expand:Class;
 		
 		[Embed(source="widgets/TOC/assets/images/minus.png")]
-		[Bindable] private var _Collapse:Class;
+		[Bindable]
+		private var _Collapse:Class;
 		
 		private var _tocLayerMenu:TocLayerMenu
 		
 		[Embed(source="widgets/TOC/assets/images/Context_menu11.png")]
-		[Bindable] public var contextCls:Class;
+		[Bindable]
+		public var contextCls:Class;
 		
 		private var _layerMenuImage:Image;
 		
@@ -73,6 +87,7 @@ package widgets.TOC.toc.tocClasses
 		public function TocItemRenderer()
 		{
 			super();
+			
 			addEventListener(MouseEvent.CLICK, itemClickHandler);
 		}
 
@@ -80,7 +95,8 @@ package widgets.TOC.toc.tocClasses
 		{
 			super.data = value;
 			
-			if (!_btn2){
+			if (!_btn2)
+			{
 				_btn2 = new Image();
 				_btn2.id = "btnCollapseExp"
 				_btn2.width = 16;
@@ -94,7 +110,8 @@ package widgets.TOC.toc.tocClasses
 				_btn2.addEventListener(MouseEvent.CLICK, toggleLegVis);
 			}
 			
-			if (!_checkbox){
+			if (!_checkbox)
+			{
 				_checkbox = new CheckBoxScaleDependant();
 				_checkbox.addEventListener(MouseEvent.CLICK, onCheckBoxClick);
 				_checkbox.addEventListener(MouseEvent.DOUBLE_CLICK, onCheckBoxDoubleClick);
@@ -103,137 +120,136 @@ package widgets.TOC.toc.tocClasses
 				addChild(_checkbox);
 			}
 			
-			if (!_layerMenuImage){
+			if (!_layerMenuImage)
+			{
 				_layerMenuImage = new Image();
 				_layerMenuImage.source = contextCls;
 				_layerMenuImage.height = 11;
 				_layerMenuImage.width = 11;
-				_layerMenuImage.verticalAlign = "middle";
+				_layerMenuImage.setStyle("verticalAlign", "middle");
 				_layerMenuImage.buttonMode = true;
 				addChild(_layerMenuImage);
 				_layerMenuImage.addEventListener(MouseEvent.CLICK, onLayerMenuImageClick);
 				_layerMenuImage.addEventListener(MouseEvent.DOUBLE_CLICK, onLayerMenuImageDoubleClick);
 			}
 			
-			if (!_group){
+			if (!_group)
+			{
 				_group = new Group();
 				_group.mouseEnabled = _group.mouseChildren = false;
 				_group.y = 4;
 				addChild(_group);
 			}
 			
-			if (!_vGroup){
-				_vGroup = new VGroup();
-				_vGroup.gap = -1;
-				_vGroup.mouseEnabled = _vGroup.mouseChildren = false;
-				addChild(_vGroup);
+			if (!_vbox)
+			{
+				_vbox = new VBox();
+				_vbox.setStyle("verticalGap", -1)
+				_vbox.mouseEnabled = _vbox.mouseChildren = false;
+				addChild(_vbox);
 			}
 			
 			const tocItem:TocItem = TocItem(data);
-			if (tocItem && tocItem.label != "dummy"){
+			if (tocItem && tocItem.label != "dummy")
+			{
+
 				if(!tocItem.collapsed){
-					_vGroup.mouseEnabled = _vGroup.mouseChildren = true;
+					_vbox.mouseEnabled = _vbox.mouseChildren = true;
 					_group.mouseEnabled = _group.mouseChildren = true;
 				}
-				//_checkbox.scaledependant = tocItem.scaledependant;
-				_checkbox.scaledependant = !tocItem.isInScaleRange;
+				_checkbox.scaledependant = tocItem.scaledependant;
 				_checkbox.selected = tocItem.visible;
 				
 				// Hide the checkbox for child items of tiled map services
 				_checkbox.visible = isTiledLayerChild(tocItem) ? false : true;
 				
 				// Hide the checkbox for child items of kml layer map services
-				if(!isTiledLayerChild(tocItem)){
+				if(!isTiledLayerChild(tocItem))
 					_checkbox.visible = isKMLLayerChild(tocItem) ? false : true;
-				}
 				
 				// Hide the checkbox for child items of feature layer map services
-				if(!isTiledLayerChild(tocItem) && !isKMLLayerChild(tocItem)){
+				if(!isTiledLayerChild(tocItem) && !isKMLLayerChild(tocItem))
 					_checkbox.visible = isFeatureLayerChild(tocItem) ? false : true;
-				}
 				
 				// Apply a bold label style to root nodes
 				setStyle("fontWeight", tocItem.isTopLevel() ? "bold" : "normal");
 				
 				//If ScaleDependant than make text gray
-				label.enabled = tocItem.isInScaleRange;
+				label.enabled = !tocItem.scaledependant;
 
 				if(tocItem.collapsed){
-					_vGroup.includeInLayout = _vGroup.visible = _group.includeInLayout = _group.visible = false;
+					_vbox.includeInLayout = _vbox.visible = _group.includeInLayout = _group.visible = false;
 				}else{
-					_vGroup.includeInLayout = _vGroup.visible = _group.includeInLayout = _group.visible = true;
+					_vbox.includeInLayout = _vbox.visible = _group.includeInLayout = _group.visible = true;
 				}
 			}
-			_vGroup.removeAllElements();
+			_vbox.removeAllChildren();
 			_group.removeAllElements();
 			if(data is TocLayerInfoItem){
 				const tocLayerItem:TocLayerInfoItem = data as TocLayerInfoItem;
-				if (tocLayerItem && tocItem.label != "dummy"){
+				if (tocLayerItem && tocItem.label != "dummy")
+				{
 					const imageResult:* = tocLayerItem.getImageResult();
-					if (imageResult){
+					if (imageResult)
+					{
 						_group.height = imageResult.height;
 						_group.width = imageResult.width;
 						_group.addElement(imageResult);
 					}
 					
-					tocLayerItem.addLegendClasses(_vGroup);
-					if(_vGroup && _vGroup.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+					tocLayerItem.addLegendClasses(_vbox);
+					if(_vbox && _vbox.numChildren > 0 && disclosureIcon && !disclosureIcon.visible)
 						_btn2.visible = _btn2.includeInLayout = true;
-					}
-					if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+					if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible)
 						_btn2.visible = _btn2.includeInLayout = true;
-					}
-					if(tocLayerItem.collapsed && _btn2.visible){
+					if(tocLayerItem.collapsed && _btn2.visible)
 						_btn2.source = _Collapse;
-					}
-					_vGroup.invalidateSize();
-					_vGroup.invalidateDisplayList();
+					_vbox.invalidateSize();
+					_vbox.invalidateDisplayList();
 				}
 			}else if(data is TocKmlFolderItem){
 				const tocKMLItem:TocKmlFolderItem = data as TocKmlFolderItem;
-				if (tocKMLItem && tocItem.label != "dummy"){
+				if (tocKMLItem && tocItem.label != "dummy")
+				{
 					const imageResult2:* = tocKMLItem.getImageResult();
-					if (imageResult){
+					if (imageResult)
+					{
 						_group.height = imageResult2.height;
 						_group.width = imageResult2.width;
 						_group.addElement(imageResult2);
 					}
 					
-					tocKMLItem.addLegendClasses(_vGroup);
-					if(_vGroup && _vGroup.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+					tocKMLItem.addLegendClasses(_vbox);
+					if(_vbox && _vbox.numChildren > 0 && disclosureIcon && !disclosureIcon.visible)
 						_btn2.visible = _btn2.includeInLayout = true;
-					}
-					if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+					if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible)
 						_btn2.visible = _btn2.includeInLayout = true;
-					}
-					if(tocKMLItem.collapsed && _btn2.visible){
+					if(tocKMLItem.collapsed && _btn2.visible)
 						_btn2.source = _Collapse;
-					}
-					_vGroup.invalidateSize();
-					_vGroup.invalidateDisplayList();
+					_vbox.invalidateSize();
+					_vbox.invalidateDisplayList();
 				}
 			}else if(data is TocKmlNetworkLinkItem){
 				const tocKMLnetlinkItem:TocKmlNetworkLinkItem = data as TocKmlNetworkLinkItem;
-				if (tocKMLnetlinkItem && tocItem.label != "dummy"){
+				if (tocKMLnetlinkItem && tocItem.label != "dummy")
+				{
 					const imageResult3:* = tocKMLnetlinkItem.getImageResult();
-					if (imageResult){
+					if (imageResult)
+					{
 						_group.height = imageResult3.height;
 						_group.width = imageResult3.width;
 						_group.addElement(imageResult3);
 					}
 					
-					tocKMLnetlinkItem.addLegendClasses(_vGroup);
-					if(_vGroup && _vGroup.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+					tocKMLnetlinkItem.addLegendClasses(_vbox);
+					if(_vbox && _vbox.numChildren > 0 && disclosureIcon && !disclosureIcon.visible)
 						_btn2.visible = _btn2.includeInLayout = true;
-					}
-					if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+					if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible)
 						_btn2.visible = _btn2.includeInLayout = true;
-					}
-					if(tocKMLnetlinkItem.collapsed && _btn2.visible){
+					if(tocKMLnetlinkItem.collapsed && _btn2.visible)
 						_btn2.source = _Collapse;
-					}
-					_vGroup.invalidateSize();
-					_vGroup.invalidateDisplayList();
+					_vbox.invalidateSize();
+					_vbox.invalidateDisplayList();
 				}
 			}
 			
@@ -255,9 +271,8 @@ package widgets.TOC.toc.tocClasses
 				AppEvent.dispatch(AppEvent.LAUNCHING_TOC_LAYER_MENU);
 				_tocLayerMenu = new TocLayerMenu();
 				var originPoint:Point = new Point(x + width, label.y);
-				if (FlexGlobals.topLevelApplication.layoutDirection != "rtl"){ // fix for RTL
+				if (FlexGlobals.topLevelApplication.layoutDirection != "rtl") // fix for RTL
 					originPoint.x -= _tocLayerMenu.width;
-				}
 				var globalPoint:Point = localToGlobal(originPoint);
 				_tocLayerMenu.popUpForItem(parent.parent, data, ViewerContainer.getInstance().mapManager.map, globalPoint.x, globalPoint.y + (_layerMenuImage.height + 4));//height);
 				
@@ -268,7 +283,8 @@ package widgets.TOC.toc.tocClasses
 		private function onRemovalFromStage(event:AppEvent):void
 		{
 			AppEvent.removeListener(AppEvent.TOC_HIDDEN, onRemovalFromStage);
-			if (_tocLayerMenu){
+			if (_tocLayerMenu)
+			{
 				_tocLayerMenu.remove();
 				_tocLayerMenu = null;
 			}
@@ -282,22 +298,24 @@ package widgets.TOC.toc.tocClasses
 		public function toggleLegVis(evt:Event):void
 		{			
 			const tocItem:TocItem = TocItem(data);
-			if (_vGroup && _vGroup.numElements > 0){
-				if(_vGroup.visible){
+			if (_vbox && _vbox.numChildren > 0)
+			{
+				if(_vbox.visible){
 					_btn2.source = _Expand;
-					_vGroup.visible = false;
-					_vGroup.includeInLayout = false;
+					_vbox.visible = false;
+					_vbox.includeInLayout = false;
 					invalidateDisplayList();
 					tocItem.collapsed = true;
 				}else{
 					_btn2.source = _Collapse;
-					_vGroup.visible = true;
-					_vGroup.includeInLayout = true;
+					_vbox.visible = true;
+					_vbox.includeInLayout = true;
 					invalidateDisplayList();
 					tocItem.collapsed = false;
 				}
 			}
-			if (_group && _group.numElements > 0){
+			if (_group && _group.numElements > 0)
+			{
 				if(_group.visible){
 					_btn2.source = _Expand;
 					_group.visible = _group.includeInLayout = false;
@@ -321,9 +339,10 @@ package widgets.TOC.toc.tocClasses
 			const tocItem:TocItem = TocItem(data);
 	
 	        // Add space for the checkbox and gaps
-	        if (isNaN(explicitWidth) && !isNaN(measuredWidth)) {
+	        if (isNaN(explicitWidth) && !isNaN(measuredWidth))
+	        {
 	            var w:Number = measuredWidth;
-				if (_vGroup && _vGroup.numElements > 0 && _vGroup.measuredWidth > w) w = _vGroup.measuredWidth;
+				if (_vbox && _vbox.numChildren > 0 && _vbox.measuredWidth > w) w = _vbox.measuredWidth;
 				if(tocItem){
 					if(w < tocItem.tocMinWidth){
 						if(tocItem.scroller && tocItem.scroller.verticalScrollBar.visible){
@@ -337,11 +356,11 @@ package widgets.TOC.toc.tocClasses
 				}
 				measuredWidth = w;
 	        }
-			if (!isNaN(measuredHeight)){
+			if (!isNaN(measuredHeight))
+			{
 				var h:Number = measuredHeight + 5;
-				if(_vGroup && _vGroup.numElements > 0 && _vGroup.visible){
-					h += _vGroup.getExplicitOrMeasuredHeight();
-				}
+				if(_vbox && _vbox.numChildren > 0 && _vbox.visible)
+					h += _vbox.getExplicitOrMeasuredHeight();
 				measuredHeight = h;
 			}
 	    }
@@ -368,28 +387,25 @@ package widgets.TOC.toc.tocClasses
 				_checkbox.visible = isTiledLayerChild(tocItem) ? false : true;
 				
 				// Hide the checkbox for child items of kml layer map services
-				if(!isTiledLayerChild(tocItem)){
+				if(!isTiledLayerChild(tocItem))
 					_checkbox.visible = isKMLLayerChild(tocItem) ? false : true;
-				}
+				
 				// Hide the checkbox for child items of feature layer map services
-				if(!isTiledLayerChild(tocItem) && !isKMLLayerChild(tocItem)){
+				if(!isTiledLayerChild(tocItem) && !isKMLLayerChild(tocItem))
 					_checkbox.visible = isFeatureLayerChild(tocItem) ? false : true;
-				}
 			}
 			
 			_btn2.visible = _btn2.includeInLayout = false;
 			
-			if(_vGroup && _vGroup.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+			if(_vbox && _vbox.numChildren > 0 && disclosureIcon && !disclosureIcon.visible)
 				_btn2.visible = _btn2.includeInLayout = true;
-			}
 			
-			if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible){
+			if(_group && _group.numElements > 0 && disclosureIcon && !disclosureIcon.visible)
 				_btn2.visible = _btn2.includeInLayout = true;
-			}
 			
 			//If ScaleDependant than make text gray
 			if(tocItem){
-				label.enabled = tocItem.isInScaleRange;
+				label.enabled = !tocItem.scaledependant;
 			}
 				
 	        var startx:Number = data ? TreeListData(listData).indent : 0;
@@ -410,17 +426,19 @@ package widgets.TOC.toc.tocClasses
 	        _checkbox.setActualSize(_checkbox.measuredWidth, _checkbox.measuredHeight);
 	        _checkbox.y = 7;
 			_btn2.y = 5;
-			if(_checkbox.visible){
+			if(_checkbox.visible)
 	        	startx = _checkbox.x + _checkbox.width + POST_CHECKBOX_GAP;
-			}
-			if (_group && _group.numElements > 0 && _group.visible){
+			
+			if (_group && _group.numElements > 0 && _group.visible)
+			{
 				_group.setActualSize(_group.contentWidth, _group.contentHeight);
 				_group.x = startx;
 				_group.y = (_group.height > 0)?(unscaledHeight - _group.height) / 2 : 4;
 				startx = _group.x + 30 + POST_CHECKBOX_GAP;
 			}
 			
-	        if (icon){
+	        if (icon)
+	        {
 	            icon.x = startx;
 	            startx = icon.x + icon.width;
 	        }
@@ -432,18 +450,26 @@ package widgets.TOC.toc.tocClasses
 			if(tocItem){
 				if(tocItem.collapsed){
 					_btn2.source = _Expand;
-					_vGroup.includeInLayout = _vGroup.visible = _group.includeInLayout = _group.visible = false;
+					_vbox.includeInLayout = _vbox.visible = _group.includeInLayout = _group.visible = false;
 				}else{
 					_btn2.source = _Collapse;
-					_vGroup.includeInLayout = _vGroup.visible = _group.includeInLayout = _group.visible = true;
+					_vbox.includeInLayout = _vbox.visible = _group.includeInLayout = _group.visible = true;
 				}
 			}
 			
-			if (_vGroup && _checkbox && _vGroup.visible){
-				_vGroup.setActualSize(_vGroup.measuredWidth, _vGroup.measuredHeight);
-				_vGroup.x = label.x + 2;
-				_vGroup.y = 25;
+			if (_vbox && _checkbox && _vbox.visible)
+			{
+				_vbox.setActualSize(_vbox.measuredWidth, _vbox.measuredHeight);
+				_vbox.x = label.x + 2;
+				_vbox.y = 25;
 			}
+			
+			// hide the option button if this is not a layer
+			/*if (!isLayerItem(tocItem)){
+				_layerMenuImage.visible = false;
+			}else{
+				_layerMenuImage.visible = true;
+			}*/
 			
 			// hide the option button if this is not a layer or if the sublayer does not have an extent
 			if((isLayerItem(tocItem) || hasLayerExtent(tocItem)) && isMenuEmpty(tocItem) == false){
@@ -453,12 +479,10 @@ package widgets.TOC.toc.tocClasses
 			}
 				
 			if(tocItem){
-				if(tocItem.ttooltip && tocItem.ttooltip != "" && !TOC(parent.parent).UseESRIDesc){
+				if(tocItem.ttooltip && tocItem.ttooltip != "" && !TOC(parent.parent).UseESRIDesc)
 					_layerMenuImage.visible = true;
-				}
-				if(!tocItem.isInScaleRange){
+				if(tocItem.scaledependant)
 					_layerMenuImage.visible = true;
-				}
 			}
 			
 			var layerMenuImageSpace:Number = POST_CHECKBOX_GAP + _layerMenuImage.width + PRE_CHECKBOX_GAP;
@@ -481,15 +505,14 @@ package widgets.TOC.toc.tocClasses
 					}
 				}
 				
-				if(!item.isInScaleRange){
+				if(item.scaledependant){
 					retVal = false;
 				}
 				if (parent.parent is TOC){
 					_toc = TOC(parent.parent);
 					if (_toc.UseESRIDesc){
-						if(item is TocMapLayerItem){
+						if(item is TocMapLayerItem)
 							_layer = TocMapLayerItem(item).layer;
-						}
 						if(_layer){
 							if(!(_layer is FeatureLayer && FeatureLayer(_layer).featureCollection)){
 								retVal = false;
@@ -595,7 +618,8 @@ package widgets.TOC.toc.tocClasses
 	    {
 	        event.stopPropagation();
 	
-	        if (data is TocItem){
+	        if (data is TocItem)
+	        {
 	            var item:TocItem = TocItem(data);
 	            item.visible = _checkbox.selected;
 	        }

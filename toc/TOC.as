@@ -13,24 +13,27 @@ package widgets.TOC.toc
 {
 
 	import com.esri.ags.Map;
+	import com.esri.ags.events.LayerEvent;
 	import com.esri.ags.events.MapEvent;
 	import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
 	import com.esri.ags.layers.ArcGISTiledMapServiceLayer;
 	import com.esri.ags.layers.ArcIMSMapServiceLayer;
-	import com.esri.ags.layers.CSVLayer;
 	import com.esri.ags.layers.FeatureLayer;
-	import com.esri.ags.layers.GeoRSSLayer;
 	import com.esri.ags.layers.GraphicsLayer;
 	import com.esri.ags.layers.KMLLayer;
 	import com.esri.ags.layers.Layer;
 	import com.esri.ags.layers.WMSLayer;
 	import com.esri.ags.virtualearth.VETiledLayer;
+	import com.esri.viewer.AppEvent;
+	import com.esri.viewer.ErrorMessage;
 	
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	
 	import mx.collections.ArrayCollection;
+	import mx.controls.Image;
 	import mx.controls.Tree;
+	import mx.controls.listClasses.IListItemRenderer;
 	import mx.core.ClassFactory;
 	import mx.core.FlexGlobals;
 	import mx.core.ScrollPolicy;
@@ -38,6 +41,7 @@ package widgets.TOC.toc
 	import mx.effects.Fade;
 	import mx.events.CollectionEvent;
 	import mx.events.CollectionEventKind;
+	import mx.events.DragEvent;
 	import mx.events.ListEvent;
 	
 	import spark.components.HGroup;
@@ -188,17 +192,15 @@ package widgets.TOC.toc
 		override protected function mouseOverHandler(event:MouseEvent):void 
 		{
 			var item:TocItem = mouseEventToItemRenderer(event).data as TocItem;
-			if (item != null && item.label != "dummy") {
+			if (item != null && item.label != "dummy") 
 				super.mouseOverHandler(event);
-			}
 		}
 		
 		override protected function mouseDownHandler(event:MouseEvent):void 
 		{
 			var item:TocItem = mouseEventToItemRenderer(event).data as TocItem;
-			if (item != null && item.label != "dummy") {
+			if (item != null && item.label != "dummy") 
 				super.mouseDownHandler(event);
-			}
 		}
 	
 	    public function set isMapServiceOnly(value:Boolean):void
@@ -570,9 +572,8 @@ package widgets.TOC.toc
 	    private function registerMapLayer(layer:Layer):void
 	    {
 			if(layer.name != "dummy"){
-		        if (filterOutSubLayer(layer)){
+		        if (filterOutSubLayer(layer))
 		            return;
-				}
 			}
 			lLoader.visible = lLoader.includeInLayout = true;
 			numOfLayers += 1;
@@ -582,9 +583,8 @@ package widgets.TOC.toc
 			}
 	
 	        // Init any layer properties, styles, and effects
-	        if (useLayerFadeEffect){
+	        if (useLayerFadeEffect)
 	            setLayerFadeEffect(layer);
-			}
 	
 	        // Add a new top-level TOC item at the beginning of the list (reverse rendering order)
 	        const tocItem:TocMapLayerItem = new TocMapLayerItem(layer, _labelFunction, _isMapServiceOnly, _excludeLayers, _legendCollapsed, _metadataToolTip, _disableZoomTo);
@@ -602,22 +602,26 @@ package widgets.TOC.toc
 			} else if (layer is KMLLayer) {
 				tocItem.ttooltip = KMLLayer(layer).description;
 				order++;
-			} else if (layer is CSVLayer) {
-				tocItem.ttooltip = CSVLayer(layer).copyright;
-				order++;
-			} else if (layer is GeoRSSLayer) {
-				tocItem.ttooltip = GeoRSSLayer(layer).description;
-				order++;
 			} else if (layer is FeatureLayer) {
-				if(!FeatureLayer(layer).url){
-					tocItem.ttooltip = "";
-					order++;
-				}else{
-					var msName:String = FeatureLayer(layer).url.replace("FeatureServer","MapServer");
-					if(msName.substring(msName.length - 9) != "MapServer"){
-						var arc:ArcGISDynamicMapServiceLayer = new ArcGISDynamicMapServiceLayer(msName.substring(0,msName.lastIndexOf("/")));
-						tocItem.ttooltip = arc.serviceDescription;
+				const florder:int = order;
+				var msName:String = FeatureLayer(layer).url.replace("FeatureServer","MapServer");
+				if(msName.substring(msName.length - 9) != "MapServer"){
+					var arc:ArcGISDynamicMapServiceLayer = new ArcGISDynamicMapServiceLayer(msName.substring(0,msName.lastIndexOf("/")));
+					if(arc.loaded){
+						tocItem.ttooltip = arc.serviceDescription
 						order++;
+					}else{
+						ready = false;
+						arc.addEventListener(LayerEvent.LOAD, 
+							function(event:LayerEvent):void{
+								tocItem.ttooltip = ArcGISDynamicMapServiceLayer(event.layer).serviceDescription;
+								_tocRoots.addItemAt(tocItem, (order--) - florder);
+								order++;
+								if(_expanded && !_fullexpanded) expandItem(tocItem, true, true, false, null);
+								if(_expanded && _fullexpanded){
+									expandAll(tocItem);
+								}
+							});
 					}
 				}
 			}
@@ -659,16 +663,14 @@ package widgets.TOC.toc
 	
 	    private function addLayerFilterListeners(filter:ArrayCollection):void
 	    {
-	        if (filter){
+	        if (filter)
 	            filter.addEventListener(CollectionEvent.COLLECTION_CHANGE, onFilterChange, false, 0, true);
-			}
 	    }
 	
 	    private function removeLayerFilterListeners(filter:ArrayCollection):void
 	    {
-	        if (filter){
+	        if (filter)
 	            filter.removeEventListener(CollectionEvent.COLLECTION_CHANGE, onFilterChange);
-			}
 	    }
 	
 	    private function onFilterChange(event:CollectionEvent = null):void
@@ -703,12 +705,10 @@ package widgets.TOC.toc
 		private function filterOutSubLayer(layer:Layer, id:int = -1):Boolean
 		{
 			var exclude:Boolean = false;
-			if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer)){
+			if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer))
 				exclude = true;
-			}
-			if (layer.name.indexOf("hiddenLayer_") != -1){
+			if (layer.name.indexOf("hiddenLayer_") != -1)
 				exclude = true;
-			}
 			if (!exclude && excludeLayers) {
 				exclude = false;
 				for each (var item:* in excludeLayers) {
@@ -728,12 +728,10 @@ package widgets.TOC.toc
 	    private function filterOutLayer(layer:Layer):Boolean
 	    {
 	        var exclude:Boolean = false;
-	        if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer)){
+	        if (excludeGraphicsLayers && layer is GraphicsLayer && !(layer is FeatureLayer))
 	            exclude = true;
-			}
-			if (layer.name.indexOf("hiddenLayer_") != -1){
+			if (layer.name.indexOf("hiddenLayer_") != -1)
 				exclude = true;
-			}
 	        if (!exclude && excludeLayers){
 	            exclude = false;
 	            for each (var item:* in excludeLayers){
@@ -755,22 +753,20 @@ package widgets.TOC.toc
 	        return exclude;
 	    }
 	
-		private function normalizeLayerFilter(value:Object):ArrayCollection
-		{
-			var filter:ArrayCollection;
-			if (value is ArrayCollection){
-				filter = value as ArrayCollection;
-			}else if (value is Array){
-				filter = new ArrayCollection(value as Array);
-			}else if (value is String || value is Layer){
-				// Possibly a String (layer id) or Layer object
-				filter = new ArrayCollection([ value ]);
-			}else{
-				// Unsupported value type
-				filter = null;
-			}
-			return filter;
-		}
+	    private function normalizeLayerFilter(value:Object):ArrayCollection
+	    {
+	        var filter:ArrayCollection;
+	        if (value is ArrayCollection)
+	            filter = value as ArrayCollection;
+	        else if (value is Array)
+	            filter = new ArrayCollection(value as Array);
+	        else if (value is String || value is Layer)// Possibly a String (layer id) or Layer object
+	            filter = new ArrayCollection([ value ]);
+	        else// Unsupported value type
+	            filter = null;
+
+	        return filter;
+	    }
 	
 	    /**
 	     * Double click handler for expanding or collapsing a tree branch.
@@ -825,20 +821,11 @@ package widgets.TOC.toc
 		private function legendDataLoadedHandler2(event:Event):void
 		{
 			_tocRoots.refresh();
-			var OpenItems:Object = openItems;
-			dataProvider = _tocRoots;
-			openItems = OpenItems;
-		}
-		
-		override protected function mouseWheelHandler(event:MouseEvent):void
-		{
-			event.delta = (event.delta > 0) ? 1:-1;
-			super.mouseWheelHandler(event);
 		}
 		
 		private function legendDataLoadedHandler(event:Event):void
 		{
-			//_tocRoots.refresh();
+			_tocRoots.refresh();
 			
 			numOfLayers -= 1;
 			if (numOfLayers <= 0){
@@ -858,10 +845,6 @@ package widgets.TOC.toc
 						}
 					}
 				}
-				_tocRoots.refresh();
-				var OpenItems:Object = openItems;
-				dataProvider = _tocRoots;
-				openItems = OpenItems;
 			}
 		}
 	}

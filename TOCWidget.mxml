@@ -1,36 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--Version 2.5.1.1-->
 <viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
                    xmlns:s="library://ns.adobe.com/flex/spark"
                    xmlns:mx="library://ns.adobe.com/flex/mx"
                    xmlns:viewer="com.esri.viewer.*"
+				   xmlns:Toc="widgets.TOC.*"
                    xmlns:toccomp="widgets.TOC.toc.*"
 				   xmlns:esri="http://www.esri.com/2008/ags"
                    widgetConfigLoaded="init()"
 				   mouseDown="wTemplate_clickHandler(event)"
-                   x="600" y="400"
-				   initialize="basewidget1_initializeHandler(event)">
+                   x="600" y="400">
 	
     <fx:Script>
         <![CDATA[
+			import com.esri.ags.events.MapEvent;
+			import com.esri.ags.layers.FeatureLayer;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
 			import com.esri.viewer.AppEvent;
-			
-			import flash.net.registerClassAlias;
+			import com.esri.viewer.ViewerContainer;
 			
 			import mx.collections.ArrayCollection;
 			import mx.controls.Alert;
-			import mx.events.FlexEvent;
-			
-			import widgets.TOC.toc.tocClasses.LegendDataClassItem;
-			import widgets.TOC.toc.tocClasses.LegendDataItem;
-			import widgets.TOC.toc.tocClasses.LegendSymbolItem;
-			
-			//Build Constants
-			protected const VERSION:String = "3.1.4";
-			protected const BUILDDATE:String = "1/25/2013";
-			
-			//Resources
-			[Embed(source="assets/images/i_about.png")]
-			private var iconClass:Class;
+			import mx.events.CollectionEvent;
+			import mx.events.CollectionEventKind;
 			
 			[Event(name="layervischanged", type="flash.events.Event")]
 			private static const LAYER_VIS_CHANGED:String = "layervischanged";
@@ -62,6 +55,8 @@
 			
 			private var excludeGraphicsLayers:Boolean = false;
 			
+			[Bindable] private var ZoomToExtent:String;
+			
 			[Bindable] private var ZoomToMakeVisible:String;
 			
 			[Bindable] private var ExpandAll:String;
@@ -69,16 +64,17 @@
 			[Bindable] private var CollapseAll:String;
 			
 			[Bindable] private var GeneratingLegendMsg:String;
-			
 
             private function init():void
             {
                 if (configXML){
+					ZoomToExtent = configXML.labels.zoomtoextent || "Zoom To Layer Extent";
 					ZoomToMakeVisible = configXML.labels.zoomtomakevisible || "Zoom To Make Visible";
 					ExpandAll = configXML.labels.expandall || "Expand All Layers";
 					CollapseAll = configXML.labels.collapseall || "Collapse All Layers";
 					layerVisibility = configXML.labels.visibilitylabel || getDefaultString("layerListTitle");;
 					GeneratingLegendMsg = configXML.labels.generatinglegendmsg || "Generating TOC Legend";
+					lTimeout = configXML.legendtimeout || 60;
 					expanded = configXML.tocsettings.expanded && configXML.tocsettings.expanded == "true";
 					disableZoomTo = configXML.tocsettings.disablezoomtomenuoption && configXML.tocsettings.disablezoomtomenuoption == "true";
 					if(expanded)
@@ -101,8 +97,7 @@
 								bname = configData.basemaps[b].label;
 								var excludesb:Object ={
 									name: bname,
-									ids: null,
-									isbasemap: true
+									ids: null
 								}
 								excludedLayers.addItem(excludesb);
 							}
@@ -118,14 +113,13 @@
 							idsArray = null;
 						var excludes:Object ={
 							name: name,
-							ids: idsArray,
-							isbasemap: false
+							ids: idsArray
 						}
 						excludedLayers.addItem(excludes);
 					}
                 }
 				toc.excludeLayers = excludedLayers;
-				wTemplate.header.addEventListener(MouseEvent.CLICK, DisplayVersion);
+				scr.addEventListener(MouseEvent.MOUSE_WHEEL, bumpDelta, true);
             }
 
 			private function getExcludeLayers():ArrayCollection
@@ -151,24 +145,14 @@
 				return result;
 			}
 			
+			protected function bumpDelta(event:MouseEvent):void
+			{
+				event.delta *= 0.5;
+			}
+			
 			protected function wTemplate_clickHandler(event:MouseEvent):void
 			{
 				AppEvent.dispatch(AppEvent.TOC_HIDDEN); // always hide the layer options popup
-			}
-			
-			protected function basewidget1_initializeHandler(event:FlexEvent):void
-			{
-				registerClassAlias("widgets.TOC.toc.tocClasses.LegendDataClassItem", LegendDataClassItem);
-				registerClassAlias("widgets.TOC.toc.tocClasses.LegendDataItem", LegendDataItem);
-				registerClassAlias("widgets.TOC.toc.tocClasses.LegendSymbolItem", LegendSymbolItem);
-			}
-			
-			private function DisplayVersion(evt:MouseEvent):void
-			{
-				if(evt.altKey){
-					Alert.show("Table Of Contents Widget Version: " + VERSION + "\nBuild Date: " + BUILDDATE,
-						wTemplate.widgetTitle, 4, null, null, iconClass);
-				}
 			}
 			
 		]]>
@@ -195,7 +179,7 @@
 							  visible="false" 
 							  verticalAlign="middle"
 							  horizontalAlign="center">
-						<s:SWFLoader id="swfMessage"
+						<mx:Image id="swfMessage"
 								  source="widgets/TOC/assets/images/loader.swf"/>
 						<s:Label id="txtMessage"
 								 width="90%"
@@ -210,7 +194,7 @@
 								 disableZoomTo="{disableZoomTo}"
 								 fullexpanded="{fullexpand}"
 								 legendCollapsed="{legendCollapsed}"
-								 liveScrolling="true"
+								 liveScrolling="false"
 								 variableRowHeight="true"
 								 tocMinWidth="{wTemplate.width - 45}"
 								 scroller="{scr}"

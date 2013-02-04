@@ -1,6 +1,9 @@
 This is my TOC/Legend widget for Flex Viewer 3.x
 Initial Release: 12-1-2010
 
+Version 3.1.5 - Feb 4, 2013
+* Fixed issue with turning on or off sublayers of a group.
+
 Version 3.1.4 - Jan 25, 2013
 * Added IdentityManager token support for Secure Services.
 

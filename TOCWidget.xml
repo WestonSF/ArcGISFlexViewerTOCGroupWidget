@@ -15,6 +15,7 @@
 <configuration>
 	<labels>
 		<visibilitylabel>Layer Visibility</visibilitylabel>
+		<zoomtoextent>Zoom To Layer Extent</zoomtoextent>
 		<expandall>Expand All Layers</expandall>
 		<collapseall>Collapse All Layers</collapseall>
 		<zoomtomakevisible>Zoom To Make Visible</zoomtomakevisible>
@@ -22,14 +23,13 @@
 	</labels>
 	<tocsettings>
 		<expanded everything="false">false</expanded>
-		<collapselegends>false</collapselegends>
-		<disablezoomtomenuoption>false</disablezoomtomenuoption>
+		<collapselegends>true</collapselegends>
+		<disablezoomtomenuoption>true</disablezoomtomenuoption>
 	</tocsettings>
+	<legendtimeout>60</legendtimeout>
 	<excludelayers>
-		<!-- <excludelayer mapservice="Symbols"></excludelayer>
-		<excludelayer mapservice="Utilities"></excludelayer> -->
-		<!-- <excludelayer mapservice="Earthquakes"></excludelayer>
-		<excludelayer mapservice="Fires"></excludelayer> -->
+		<excludelayer mapservice="Symbols"></excludelayer>
+		<excludelayer mapservice="Utilities">8</excludelayer>
 	</excludelayers>
 	<excludegraphiclayers>true</excludegraphiclayers>
 	<excludebasemaplayers>true</excludebasemaplayers>

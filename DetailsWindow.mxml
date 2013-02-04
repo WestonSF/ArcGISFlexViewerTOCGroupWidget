@@ -7,9 +7,7 @@
 					   title="{_detailsTitle}"
 					   close="closeMe()"  
 					   cornerRadius="6"
-					   skinClass="widgets.TOC.ResizeTitleWindowSkin"
-					   initialize="resizetitlewindow1_initializeHandler(event)"
-					   creationComplete="addLinkHandler(event)">
+					   skinClass="widgets.TOC.ResizeTitleWindowSkin">
 	<TOC:layout>
 		<s:VerticalLayout horizontalAlign="center" verticalAlign="middle" />
 	</TOC:layout>
@@ -17,19 +15,14 @@
 	<fx:Script>
 		<![CDATA[
 			import flashx.textLayout.conversion.TextConverter;
-			import flashx.textLayout.elements.Configuration;
-			import flashx.textLayout.events.FlowElementMouseEvent;
-			import flashx.textLayout.formats.TextDecoration;
-			import flashx.textLayout.formats.TextLayoutFormat;
 			
-			import mx.events.FlexEvent;
 			import mx.managers.PopUpManager;
 			
-			[Bindable] private var _content:String;
+			[Bindable]
+			private var _content:String;
 			
-			[Bindable] private var _detailsTitle:String;
-			
-			[Bindable] private var textLayoutConfiguration:Configuration;
+			[Bindable]
+			private var _detailsTitle:String;
 			
 			private function closeMe():void
 			{
@@ -45,34 +38,6 @@
 			{
 				_detailsTitle = value;
 			}
-			
-			protected function resizetitlewindow1_initializeHandler(event:FlexEvent):void
-			{
-				textLayoutConfiguration = new Configuration();
-				var textLayoutFormat:TextLayoutFormat = new TextLayoutFormat();
-				textLayoutFormat.color = getStyle("linkActiveColor")
-				textLayoutFormat.textDecoration = TextDecoration.UNDERLINE;
-				textLayoutConfiguration.defaultLinkActiveFormat = textLayoutFormat;
-				textLayoutFormat = new TextLayoutFormat();
-				textLayoutFormat.color = getStyle("linkHoverColor")
-				textLayoutFormat.textDecoration = TextDecoration.UNDERLINE;
-				textLayoutConfiguration.defaultLinkHoverFormat = textLayoutFormat;
-				textLayoutFormat = new TextLayoutFormat();
-				textLayoutFormat.color = getStyle("linkNormalColor")
-				textLayoutFormat.textDecoration = TextDecoration.UNDERLINE;
-				textLayoutConfiguration.defaultLinkNormalFormat = textLayoutFormat;
-			}
-			
-			protected function addLinkHandler(event:Event):void
-			{
-				ret.textFlow.addEventListener(FlowElementMouseEvent.CLICK, onLinkHandler);
-			}
-			
-			protected function onLinkHandler(event:FlowElementMouseEvent):void
-			{
-				closeMe();
-			}
-			
 		]]>
 	</fx:Script>
 	
@@ -80,13 +45,13 @@
 				hasFocusableChildren="false"
 				measuredSizeIncludesScrollBars="false"
 				minViewportInset="1">
-		<s:RichEditableText editable="false" id="ret" 
+		<s:RichEditableText editable="false"
 							paddingLeft="5"
 							paddingRight="5"
 							paddingTop="10"
 							backgroundAlpha="{getStyle('backgroundAlpha')}"
 						 	backgroundColor="{getStyle('backgroundColor')}"
-							textFlow="{TextConverter.importToFlow(_content, TextConverter.TEXT_FIELD_HTML_FORMAT, textLayoutConfiguration)}"/>
+							textFlow="{TextConverter.importToFlow(_content, TextConverter.TEXT_FIELD_HTML_FORMAT)}"/>
 	</s:Scroller>
 	<TOC:controlBarContent>
 	</TOC:controlBarContent>
