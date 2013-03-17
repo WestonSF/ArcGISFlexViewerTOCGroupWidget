@@ -23,7 +23,7 @@
                    xmlns:s="library://ns.adobe.com/flex/spark"
                    xmlns:mx="library://ns.adobe.com/flex/mx"
                    xmlns:esri="http://www.esri.com/2008/ags"
-				   xmlns:Toc="widgets.TOC.toc.tocClasses.*"
+				   xmlns:Toc="widgets.TOCGroup.toc.tocClasses.*"
 				   width="{menuListDG.width + 4}" 
 				   height="{menuListDG.height + 2}"
                    cornerRadius="4"
@@ -57,8 +57,8 @@
 			
 			import spark.components.supportClasses.ItemRenderer;
 			
-			import widgets.TOC.DetailsWindow;
-			import widgets.TOC.toc.TOC;
+			import widgets.TOCGroup.DetailsWindow;
+			import widgets.TOCGroup.toc.TOC;
 			
             private static const WEB_MERCATOR_IDS:Array = [ 102100, 3857, 102113 ];
 
@@ -74,7 +74,7 @@
 			
 			[Bindable] private var CollapseAll:String = "";
 			
-			[Embed(source="widgets/TOC/assets/images/metadata.png")]
+			[Embed(source="widgets/TOCGroup/assets/images/metadata.png")]
 			[Bindable] private var _DescCls:Class;
 			
 			[Bindable] private var menuArrCol:ArrayCollection;

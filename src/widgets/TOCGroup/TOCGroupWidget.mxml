@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Version 2.5.1.1-->
+<viewer:BaseWidget xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:viewer="com.esri.viewer.*"
+				   xmlns:Toc="widgets.TOC.*"
+				   xmlns:toccomp="widgets.TOC.toc.*"
+				   xmlns:esri="http://www.esri.com/2008/ags"
+				   widgetConfigLoaded="init()"
+				   mouseDown="wTemplate_clickHandler(event)"
+				   x="600" y="400">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.events.MapEvent;
+			import com.esri.ags.layers.FeatureLayer;
+			import com.esri.ags.layers.GraphicsLayer;
+			import com.esri.ags.layers.Layer;
+			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.containers.VBox;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.events.CollectionEvent;
+			import mx.events.CollectionEventKind;
+			
+			import spark.components.Application;
+			import spark.components.RadioButton;
+			import spark.components.Scroller;
+			import spark.layouts.TileOrientation;
+			
+			import widgets.TOCGroup.toc.TOC;
+			
+			[Event(name="layervischanged", type="flash.events.Event")]
+			private static const LAYER_VIS_CHANGED:String = "layervischanged";
+			
+			private const ICON_URL:String = "widgets/TOCGroup/assets/images/";
+			
+			[Embed(source="widgets/TOCGroup/assets/images/plus.png")]
+			public var plus:Class;
+			
+			[Embed(source="widgets/TOCGroup/assets/images/minus.png")]
+			public var minus:Class;
+			
+			[Bindable] private var expanded:Boolean;
+			
+			[Bindable] private var fullexpand:Boolean;
+			
+			[Bindable] private var legendCollapsed:Boolean;
+			
+			[Bindable] private var UseNewEsriDescrption:Boolean;
+			
+			[Bindable] private var disableZoomTo:Boolean;
+			
+			//label
+			[Bindable] private var layerVisibility:String;
+			
+			[Bindable]private var lTimeout:int = 60;
+			
+			[Bindable] private var excludedLayers:ArrayCollection;
+			
+			private var excludeGraphicsLayers:Boolean = false;
+			
+			[Bindable] private var ZoomToExtent:String;
+			
+			[Bindable] private var ZoomToMakeVisible:String;
+			
+			[Bindable] private var ExpandAll:String;
+			
+			[Bindable] private var CollapseAll:String;
+			
+			[Bindable] private var GeneratingLegendMsg:String;
+			
+			[Bindable] private var Themes:String;
+			
+			private function init():void
+			{
+				if (configXML){
+					ZoomToExtent = configXML.labels.zoomtoextent || "Zoom To Layer Extent";
+					ZoomToMakeVisible = configXML.labels.zoomtomakevisible || "Zoom To Make Visible";
+					ExpandAll = configXML.labels.expandall || "Expand All Layers";
+					CollapseAll = configXML.labels.collapseall || "Collapse All Layers";
+					layerVisibility = configXML.labels.visibilitylabel || getDefaultString("layerListTitle");;
+					GeneratingLegendMsg = configXML.labels.generatinglegendmsg || "Generating TOC Legend";
+					lTimeout = configXML.legendtimeout || 60;
+					expanded = configXML.tocsettings.expanded && configXML.tocsettings.expanded == "true";
+					disableZoomTo = configXML.tocsettings.disablezoomtomenuoption && configXML.tocsettings.disablezoomtomenuoption == "true";
+					if(expanded)
+						fullexpand = configXML.tocsettings.expanded.@everything[0] && configXML.tocsettings.expanded.@everything[0] == "true";
+					legendCollapsed = configXML.tocsettings.collapselegends && configXML.tocsettings.collapselegends == "true";
+					UseNewEsriDescrption = configXML.usenewesridescription && configXML.usenewesridescription == "true";
+					
+					excludedLayers = new ArrayCollection;
+					excludeGraphicsLayers = configXML.excludegraphiclayers && configXML.excludegraphiclayers == "true";					
+					
+					// Load in accordion theme tabs
+					Themes = configXML.themes;
+					var ThemesArray:Array = Themes.split(",");
+					var count:int = 0;
+					while (ThemesArray.length > count) {
+						
+						excludedLayers = new ArrayCollection;
+						// Iterate through each of the maps services adding to array
+						for (var i:Number = map.layerIds.length -1; i >= 0; i--)
+						{
+							var layer:Layer = map.getLayer(map.layerIds[i]);
+							var name:String = layer.name;
+							var layerExclude:Object ={
+								name: name,
+								ids: null
+							}		
+							// Add them to the exclude layers array, so exclude all layers from TOC
+							excludedLayers.addItem(layerExclude);						
+						}
+						
+						// Get layers to be included in the theme
+						var includeList:XMLList = configXML.includelayers.(@theme == ThemesArray[count]).includelayer;
+						for (var j:Number = 0; j < includeList.length(); j++){
+							// Get the map service name
+							var mapservicename:String = includeList[j].@mapservice;	
+							
+							// for all the layers in the map, update the the exclude list to remove map
+							// services from config
+							for (var a:int=excludedLayers.length-1; a>=0; a--)
+							{								
+								if (excludedLayers.source[a].name == mapservicename)
+								{
+									excludedLayers.removeItemAt(a);
+								}									
+							}
+						}							
+						
+						// Add new box to the accordion
+						var vbox:VBox = new VBox();
+						vbox.label = ThemesArray[count];
+						// Set the vbox to be same width as widget
+						vbox.percentWidth = 100;
+						
+						// Add scroller
+						var scroller:Scroller = new Scroller();
+						scroller.id = "Scroller";
+						scroller.percentHeight = 100;
+						scroller.percentWidth = 100;
+						scroller.addEventListener(MouseEvent.MOUSE_WHEEL, bumpDelta, true);
+						vbox.addChild(scroller);
+						
+						// Add TOC
+						var Layers:TOC = new TOC();
+						Layers.percentHeight = 100;
+						Layers.percentWidth = 100;
+						// Better of not setting this in a panel
+						Layers.tocMinWidth = wTemplate.width - 60;
+						Layers.labels = [ZoomToMakeVisible,ExpandAll,CollapseAll];
+						Layers.scroller = scroller;
+						Layers.expanded = expanded;
+						Layers.disableZoomTo = disableZoomTo;
+						Layers.fullexpanded = fullexpand;
+						Layers.legendCollapsed = legendCollapsed;
+						Layers.liveScrolling = false;
+						Layers.variableRowHeight = true;
+						Layers.useesridescription = UseNewEsriDescrption;
+						Layers.loader = boxMessage;
+						Layers.map = map;
+						Layers.isMapServiceOnly = false; //gotta get this from the config file
+						Layers.excludeGraphicsLayers = configXML.excludegraphiclayers &&  configXML.excludegraphiclayers == "true";
+						Layers.setStyle("disclosureOpenIcon", minus);
+						Layers.setStyle("disclosureClosedIcon", plus);
+						Layers.excludeLayers = excludedLayers;
+						vbox.addChild(Layers);
+						
+						accordion.addChild(vbox);						
+						count++;
+					}
+				}
+				
+				// Set the width and height of widget to fit with panel
+				if (isPartOfPanel) // if widget is part of "left", "right" or "bottom" panel
+				{
+					this.percentWidth = this.percentHeight = 100;
+					wTemplate.percentWidth = wTemplate.percentHeight = 100;
+				}
+			}
+			
+			private function getExcludeLayers():ArrayCollection
+			{
+				var result:ArrayCollection = new ArrayCollection();
+				
+				if (configData && configData.basemaps){
+					if(configXML.excludebasemaplayers &&  configXML.excludebasemaplayers == "true"){
+						// exclude basemaps
+						for (var i:int = 0; i < configData.basemaps.length; i++){
+							result.addItem(configData.basemaps[i].label);
+						}
+					}
+				}
+				
+				if (configXML){
+					// exclude these layers
+					var layers:XMLList = configXML..excludelayer as XMLList;
+					for (var j:Number = 0; j < layers.length(); j++){
+						result.addItem(layers[j].toString());
+					}
+				}
+				return result;
+			}
+			
+			protected function bumpDelta(event:MouseEvent):void
+			{
+				event.delta *= 0.5;
+			}
+			
+			protected function wTemplate_clickHandler(event:MouseEvent):void
+			{
+				AppEvent.dispatch(AppEvent.TOC_HIDDEN); // always hide the layer options popup
+			}
+			
+		]]>
+	</fx:Script>
+	<viewer:WidgetTemplate id="wTemplate"
+						   height="380"
+						   skinClass="com.esri.viewer.skins.WidgetTemplateSkin"
+						   minWidth="360"
+						   width="360">
+		<s:Group height="100%" width="100%">
+			<s:layout>
+				<s:VerticalLayout gap="1"/>
+			</s:layout>
+			<s:HGroup id="boxMessage"
+					  width="100%"
+					  includeInLayout="false"
+					  visible="false" 
+					  verticalAlign="middle"
+					  horizontalAlign="center">								
+				<mx:Image id="swfMessage" source="widgets/TOCGroup/assets/images/loader.swf"/>								
+				<s:Label id="txtMessage" width="90%" text="{GeneratingLegendMsg}"/>
+			</s:HGroup>
+			
+			<mx:Accordion id="accordion" borderAlpha="0" width="100%" height="100%" creationPolicy="all"/>
+			
+		</s:Group>		
+	</viewer:WidgetTemplate>
+</viewer:BaseWidget>

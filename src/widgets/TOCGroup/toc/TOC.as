@@ -9,7 +9,7 @@
 // <install location>/License.txt
 //
 ////////////////////////////////////////////////////////////////////////////////
-package widgets.TOC.toc
+package widgets.TOCGroup.toc
 {
 
 	import com.esri.ags.Map;
@@ -47,10 +47,10 @@ package widgets.TOC.toc
 	import spark.components.HGroup;
 	import spark.components.Scroller;
 	
-	import widgets.TOC.toc.tocClasses.TocItem;
-	import widgets.TOC.toc.tocClasses.TocItemRenderer;
-	import widgets.TOC.toc.tocClasses.TocMapLayerItem;
-	import widgets.TOC.toc.utils.MapUtil;
+	import widgets.TOCGroup.toc.tocClasses.TocItem;
+	import widgets.TOCGroup.toc.tocClasses.TocItemRenderer;
+	import widgets.TOCGroup.toc.tocClasses.TocMapLayerItem;
+	import widgets.TOCGroup.toc.utils.MapUtil;
 	
 	//--------------------------------------
 	//  Other metadata
@@ -73,7 +73,7 @@ package widgets.TOC.toc
 			verticalScrollPolicy = ScrollPolicy.OFF;
 			variableRowHeight = true;
 	        dataProvider = _tocRoots;
-	        itemRenderer = new ClassFactory(widgets.TOC.toc.tocClasses.TocItemRenderer);
+	        itemRenderer = new ClassFactory(widgets.TOCGroup.toc.tocClasses.TocItemRenderer);
 	        iconFunction = tocItemIcon;
 	
 	        map = map;

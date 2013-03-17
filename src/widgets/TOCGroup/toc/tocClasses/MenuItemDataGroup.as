@@ -1,4 +1,4 @@
-package widgets.TOC.toc.tocClasses
+package widgets.TOCGroup.toc.tocClasses
 {
 	import mx.core.ClassFactory;
 	import spark.components.DataGroup;

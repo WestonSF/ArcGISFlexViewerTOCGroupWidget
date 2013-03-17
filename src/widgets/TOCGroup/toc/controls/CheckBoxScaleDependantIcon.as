@@ -5,7 +5,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package widgets.TOC.toc.controls
+package widgets.TOCGroup.toc.controls
 {
 	import flash.display.BitmapData;
 	import flash.geom.ColorTransform;
@@ -23,7 +23,7 @@ package widgets.TOC.toc.controls
 		 * @private
 		 */
 		[Bindable]
-		[Embed(source="widgets/TOC/assets/images/sd_overlay.png")]
+		[Embed(source="widgets/TOCGroup/assets/images/sd_overlay.png")]
 		private var sdIcon:Class;
 		
 		override protected function updateDisplayList( w:Number, h:Number ):void

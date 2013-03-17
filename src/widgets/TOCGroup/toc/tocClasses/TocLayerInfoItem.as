@@ -9,7 +9,7 @@
 // <install location>/License.txt
 //
 ////////////////////////////////////////////////////////////////////////////////
-package widgets.TOC.toc.tocClasses
+package widgets.TOCGroup.toc.tocClasses
 {
 
 	import com.esri.ags.events.ExtentEvent;

@@ -5,7 +5,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package widgets.TOC.toc.controls
+package widgets.TOCGroup.toc.controls
 {
 	import flash.events.Event;
 	

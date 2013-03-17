@@ -1,12 +1,12 @@
 // ActionScript file
-package widgets.TOC.toc.tocClasses
+package widgets.TOCGroup.toc.tocClasses
 {
 	import com.esri.ags.renderers.Renderer;
 	
 	import flash.events.EventDispatcher;
 
 	[Bindable]
-	[RemoteClass(alias="widgets.TOC.toc.tocClasses.LegendDataItem")]
+	[RemoteClass(alias="widgets.TOCGroup.toc.tocClasses.LegendDataItem")]
 	
 	public class LegendDataItem extends EventDispatcher
 	{

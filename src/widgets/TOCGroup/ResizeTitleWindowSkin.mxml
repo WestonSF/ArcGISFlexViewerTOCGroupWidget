@@ -31,7 +31,7 @@
         /** 
          * @copy spark.skins.spark.ApplicationSkin#hostComponent
          */
-        [HostComponent("widgets.TOC.DetailsWindow")]
+        [HostComponent("widgets.TOCGroup.DetailsWindow")]
         ]]>
     </fx:Metadata> 
     
@@ -226,7 +226,7 @@
                 <!--- @copy spark.components.TitleWindow#moveArea -->
                 <s:Group id="moveArea" left="0" right="0" top="0" bottom="0" />
                 
-                <s:Button id="closeButton" skinClass="widgets.TOC.WidgetCloseButtonSkin"
+                <s:Button id="closeButton" skinClass="widgets.TOCGroup.WidgetCloseButtonSkin"
                           width="20" height="20" right="5" top="5" toolTip="{resourceManager.getString('ViewerStrings', 'close')}" />
             </s:Group>
             
@@ -281,7 +281,7 @@
                 </s:Group>
 				
 				<mx:Image id="resizeHandle" right="0" bottom="0" 
-						  source="@Embed('widgets/TOC/assets/images/w_resize.png')"/>
+						  source="@Embed('widgets/TOCGroup/assets/images/w_resize.png')"/>
             </s:Group>
         </s:Group>
     </s:Group>

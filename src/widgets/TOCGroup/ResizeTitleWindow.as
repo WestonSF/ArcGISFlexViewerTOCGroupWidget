@@ -6,7 +6,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package widgets.TOC
+package widgets.TOCGroup
 {
 	import flash.events.MouseEvent;
 	
@@ -36,7 +36,7 @@ package widgets.TOC
 				iconDisplay.source = _titleIcon;
 		}
 		
-		[Embed(source="widgets/TOC/assets/images/resizeCursorTLBR.gif")]
+		[Embed(source="widgets/TOCGroup/assets/images/resizeCursorTLBR.gif")]
 		private static var CURSOR_CLASS:Class;
 		
 		private static var CURSOR_X_OFFSET:Number = -10;

@@ -9,7 +9,7 @@
 // <install location>/License.txt
 //
 ////////////////////////////////////////////////////////////////////////////////
-package widgets.TOC.toc.tocClasses
+package widgets.TOCGroup.toc.tocClasses
 {
 	import com.esri.ags.Map;
 	import com.esri.ags.esri_internal;
@@ -65,12 +65,12 @@ package widgets.TOC.toc.tocClasses
 	import mx.utils.GraphicsUtil;
 	import mx.utils.ObjectUtil;
 	
-	import widgets.TOC.toc.tocClasses.*;
-	import widgets.TOC.toc.tocClasses.LegendDataClassItem;
-	import widgets.TOC.toc.tocClasses.LegendDataItem;
-	import widgets.TOC.toc.tocClasses.LegendSymbolItem;
-	import widgets.TOC.toc.tocClasses.TocLayerInfoItem;
-	import widgets.TOC.toc.utils.MapUtil;
+	import widgets.TOCGroup.toc.tocClasses.*;
+	import widgets.TOCGroup.toc.tocClasses.LegendDataClassItem;
+	import widgets.TOCGroup.toc.tocClasses.LegendDataItem;
+	import widgets.TOCGroup.toc.tocClasses.LegendSymbolItem;
+	import widgets.TOCGroup.toc.tocClasses.TocLayerInfoItem;
+	import widgets.TOCGroup.toc.utils.MapUtil;
 	
 	/**
 	 * A TOC item representing a map service or graphics layer.

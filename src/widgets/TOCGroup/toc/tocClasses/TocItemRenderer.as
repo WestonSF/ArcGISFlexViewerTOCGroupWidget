@@ -9,7 +9,7 @@
 // <install location>/License.txt
 //
 ////////////////////////////////////////////////////////////////////////////////
-package widgets.TOC.toc.tocClasses
+package widgets.TOCGroup.toc.tocClasses
 {
 
 	import com.esri.ags.layers.FeatureLayer;
@@ -41,9 +41,9 @@ package widgets.TOC.toc.tocClasses
 	import spark.layouts.VerticalLayout;
 	import spark.primitives.BitmapImage;
 	
-	import widgets.TOC.DetailsWindow;
-	import widgets.TOC.toc.TOC;
-	import widgets.TOC.toc.controls.CheckBoxScaleDependant;
+	import widgets.TOCGroup.DetailsWindow;
+	import widgets.TOCGroup.toc.TOC;
+	import widgets.TOCGroup.toc.controls.CheckBoxScaleDependant;
 	
 	/**
 	 * A custom tree item renderer for a map Table of Contents.
@@ -66,17 +66,17 @@ package widgets.TOC.toc.tocClasses
 	
 	    private static const POST_CHECKBOX_GAP:Number = 4;
 		
-		[Embed(source="widgets/TOC/assets/images/plus.png")]
+		[Embed(source="widgets/TOCGroup/assets/images/plus.png")]
 		[Bindable]
 		private var _Expand:Class;
 		
-		[Embed(source="widgets/TOC/assets/images/minus.png")]
+		[Embed(source="widgets/TOCGroup/assets/images/minus.png")]
 		[Bindable]
 		private var _Collapse:Class;
 		
 		private var _tocLayerMenu:TocLayerMenu
 		
-		[Embed(source="widgets/TOC/assets/images/Context_menu11.png")]
+		[Embed(source="widgets/TOCGroup/assets/images/Context_menu11.png")]
 		[Bindable]
 		public var contextCls:Class;
 		

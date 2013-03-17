@@ -9,7 +9,7 @@
 // <install location>/License.txt
 //
 ////////////////////////////////////////////////////////////////////////////////
-package widgets.TOC.toc.utils
+package widgets.TOCGroup.toc.utils
 {
 
 import com.esri.ags.Map;
