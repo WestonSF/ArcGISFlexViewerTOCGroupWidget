@@ -46,14 +46,13 @@
 			import com.esri.ags.tasks.supportClasses.ProjectParameters;
 			import com.esri.ags.utils.WebMercatorUtil;
 			import com.esri.viewer.AppEvent;
-			import com.esri.viewer.ViewerContainer;
 			
 			import mx.collections.ArrayCollection;
 			import mx.core.FlexGlobals;
 			import mx.events.FlexEvent;
 			import mx.managers.PopUpManager;
 			import mx.managers.PopUpManagerChildList;
-			import mx.rpc.AsyncResponder;
+			import mx.rpc.events.FaultEvent;
 			
 			import spark.components.supportClasses.ItemRenderer;
 			
@@ -66,7 +65,7 @@
             private var _layer:Layer;
             private var _map:Map;
             private var _transparencyMenuItem:TransparencyMenuItem;
-			private var _toc:TOC;
+			private var _toc:widgets.TOCGroup.toc.TOC;
 			
 			[Bindable] private var ZoomToMakeVisible:String = "";
 			
@@ -81,8 +80,7 @@
 
             private function bordercontainer1_initializeHandler(event:FlexEvent):void
             {
-                if (GeometryServiceSingleton.instance.url) // using GeometryServiceSingleton
-                {
+                if (GeometryServiceSingleton.instance.url){ // using GeometryServiceSingleton
                     geometryService.url = GeometryServiceSingleton.instance.url;
                     geometryService.token = GeometryServiceSingleton.instance.token;
                     geometryService.proxyURL = GeometryServiceSingleton.instance.proxyURL;
@@ -94,9 +92,8 @@
 				AppEvent.addListener(AppEvent.LAUNCHING_TOC_LAYER_MENU, newLayerMenuLaunching);
 				
                 _item = item;
-				if(isMenuEmpty(item) == false){
-	                if (_item is TocMapLayerItem || _item is TocLayerInfoItem)
-	                {
+				if(isMenuEmpty(item, parent) == false){
+	                if (_item is TocMapLayerItem || _item is TocLayerInfoItem){
 	                    _map = map;
 						this.x = atX - 165;
 						this.y = atY;
@@ -106,7 +103,7 @@
 				}
             }
 			
-			private function isMenuEmpty(item:Object):Boolean
+			private function isMenuEmpty(item:Object, tparent:DisplayObject):Boolean
 			{
 				var retVal:Boolean = true;
 				
@@ -117,11 +114,11 @@
 						}
 					}
 					
-					if(item.scaledependant){
+					if(!item.isInScaleRange){
 						retVal = false;
 					}
-					if (parent is TOC){
-						_toc = TOC(parent);
+					if (tparent is TOC){
+						_toc = TOC(tparent);
 						if (_toc.UseESRIDesc){
 							if(_layer){
 								if(!(_layer is FeatureLayer && FeatureLayer(_layer).featureCollection)){
@@ -210,16 +207,19 @@
 					
 					if(item is TocMapLayerItem){
 						_layer = TocMapLayerItem(item).layer;
-						if (_layer.initialExtent && item.disableZoomTo == false)
+						if (_layer.initialExtent && item.disableZoomTo == false){
 							menuArrCol.addItem(menuItem_zt);
-						
-						if(!isFeatureLayerChild(TocItem(item))){
-							if(item.scaledependant)
-								menuArrCol.addItem(menuItem_zsd);
 						}
-						if(item.scaledependant)
-							if(!menuArrCol.contains(menuItem_zsd))
+						if(!isFeatureLayerChild(TocItem(item))){
+							if(!item.isInScaleRange){
 								menuArrCol.addItem(menuItem_zsd);
+							}
+						}
+						if(!item.isInScaleRange){
+							if(!menuArrCol.contains(menuItem_zsd)){
+								menuArrCol.addItem(menuItem_zsd);
+							}
+						}
 						menuArrCol.addItem(menuItem_t);
 						
 						if (tocMapLayerItems.length > 1){
@@ -257,10 +257,11 @@
 						}
 						
 						menuItem_zsd.label = ZoomToMakeVisible;
-						if(item.scaledependant){
+						if(!item.isInScaleRange){
 							menuArrCol.addItem(menuItem_zsd);
-							if (item.ttooltip && item.ttooltip != "")
+							if (item.ttooltip && item.ttooltip != ""){
 								menuItem_zsd.isGroup = true;
+							}
 						}
 						if (_toc.UseESRIDesc){
 							if(_layer){
@@ -288,13 +289,10 @@
 			 */
 			private function isFeatureLayerChild(item:*):Boolean
 			{
-				while (item)
-				{
+				while (item){
 					item = item.parent;
-					if (item is TocMapLayerItem)
-					{
-						if (item.layer is FeatureLayer)
-						{
+					if (item is TocMapLayerItem){
+						if (item.layer is FeatureLayer){
 							return true;
 						}
 					}
@@ -350,9 +348,7 @@
                         layerExtent.ymax = Math.min(layerExtent.ymax, 89.99);
                         layerExtent = WebMercatorUtil.geographicToWebMercator(layerExtent) as Extent;
                         updateMapExtent(layerExtent);
-                    }
-                    else if (WEB_MERCATOR_IDS.indexOf(layerExtent.spatialReference.wkid) != -1 && _map.extent.spatialReference.wkid == 4326)
-                    {
+                    }else if (WEB_MERCATOR_IDS.indexOf(layerExtent.spatialReference.wkid) != -1 && _map.extent.spatialReference.wkid == 4326){
                         layerExtent = WebMercatorUtil.webMercatorToGeographic(layerExtent) as Extent;
                         updateMapExtent(layerExtent);
                     }else{
@@ -387,9 +383,7 @@
 						layerExtent.ymax = Math.min(layerExtent.ymax, 89.99);
 						layerExtent = WebMercatorUtil.geographicToWebMercator(layerExtent) as Extent;
 						updateMapExtent(layerExtent);
-					}
-					else if (WEB_MERCATOR_IDS.indexOf(layerExtent.spatialReference.wkid) != -1 && _map.extent.spatialReference.wkid == 4326)
-					{
+					}else if (WEB_MERCATOR_IDS.indexOf(layerExtent.spatialReference.wkid) != -1 && _map.extent.spatialReference.wkid == 4326){
 						layerExtent = WebMercatorUtil.webMercatorToGeographic(layerExtent) as Extent;
 						updateMapExtent(layerExtent);
 					}else{
@@ -419,14 +413,16 @@
 					if ( _map.scale >= item2.minScale && item2.minScale != 0) {
 						_map.scale = item2.minScale - 1;
 						if(_map.level && _map.level > 0){
-							if(item2.minScale < _map.lods[_map.level].scale)
+							if(item2.minScale < _map.lods[_map.level].scale){
 								_map.level++;
+							}
 						}
 					} else if (_map.scale <= item2.maxScale && item2.maxScale != 0) {
 						_map.scale = item2.maxScale + 1;
 						if(_map.level && _map.level > 0){
-							if(item2.maxScale > _map.lods[_map.level].scale)
+							if(item2.maxScale > _map.lods[_map.level].scale){
 								_map.level--;
+							}
 						}
 					}
 				}else if (item is TocMapLayerItem){
@@ -434,14 +430,16 @@
 					if ( _map.scale >= item3.minScale && item3.minScale != 0) {
 						_map.scale = item3.minScale - 1;
 						if(_map.level && _map.level > 0){
-							if(item3.minScale < _map.lods[_map.level].scale)
+							if(item3.minScale < _map.lods[_map.level].scale){
 								_map.level++;
+							}
 						}
 					} else if (_map.scale <= item3.maxScale && item3.maxScale != 0) {
 						_map.scale = item3.maxScale + 1;
 						if(_map.level && _map.level > 0){
-							if(item3.maxScale > _map.lods[_map.level].scale)
+							if(item3.maxScale > _map.lods[_map.level].scale){
 								_map.level--;
+							}
 						}
 					}
 				}
@@ -456,8 +454,9 @@
             private function updateMapExtent(layerExtent:Extent):void
             {
                 _map.extent = layerExtent;
-                if (!_map.extent.contains(layerExtent))
+                if (!_map.extent.contains(layerExtent)){
                     _map.level--;
+				}
             }
 
             private function transparency_clickHandler():void
@@ -479,8 +478,9 @@
             {
                 var currentIndex:Number = 0;
                 for each (var layer:Layer in getLayersAfterRemovingHiddenLayers(_map.layers as ArrayCollection)){
-                    if (_layer == layer)
+                    if (_layer == layer){
                         break;
+					}
                     currentIndex++;
                 }
                 _map.reorderLayer(_layer.id, currentIndex + 1);
@@ -491,8 +491,9 @@
             {                   
                 var currentIndex:Number = 0;
                 for each (var layer:Layer in getLayersAfterRemovingHiddenLayers(_map.layers as ArrayCollection)){
-                    if (_layer == layer)
+                    if (_layer == layer){
                         break;
+					}
                     currentIndex++;
                 }
                 _map.reorderLayer(_layer.id, currentIndex - 1);
@@ -503,11 +504,40 @@
             {
                 var result:Array=[];
                 for (var i:int=0; i < layers.length; i++){
-                    if (layers.getItemAt(i).name.indexOf("hiddenLayer_") == -1 && layers.getItemAt(i).name.indexOf("dummy") == -1)
+					trace(layers.getItemAt(i).name + " Layer index :" + i);
+                    if (layers.getItemAt(i).name.indexOf("hiddenLayer_") == -1 && layers.getItemAt(i).name.indexOf("dummy") == -1){
                         result.push(layers.getItemAt(i));
+					}
                 }
-                return result; 
+				//now remove the excluded whole map services too, that are not basemaps
+				var eLyrs:ArrayCollection = _toc.excludeLayers as ArrayCollection;
+				var retArray:Array = result.concat();
+				/* for (var e:int; e < eLyrs.length; e++) {
+					var item:Object = eLyrs[e];
+					var hasIds:Boolean = item.ids;
+					if(checkLayer(result, item) == true && hasIds == false){
+						retArray.splice(retArray.indexOf(item.name), 1);
+					}
+				} */
+                return retArray; 
             }
+			
+			private function checkLayer(results:Array, item:Object):Boolean
+			{
+				var retVal:Boolean;
+				for (var i:int=0; i < results.length; i++){
+					//trace("Looking for: " + item.name + " " + i + "=" + results[i].name);
+					if (results[i].name == item.name){
+						if(!item.isbasemap){
+							retVal = true;
+						}
+						//trace(results[i].name + ": " + retVal);
+						break;
+					}
+				}
+				//trace(item.name + ": " + retVal);
+				return retVal;
+			}
 
             private function descriptionOrDownload_clickHandler():void
             {
@@ -517,8 +547,9 @@
 	                    url = "http://www.openstreetmap.org";
 	                }else if (_layer.hasOwnProperty("url")){
 	                    url = Object(_layer).url;
-	                    if (_layer is WMSLayer)
+	                    if (_layer is WMSLayer){
 	                        url += "?SERVICE=WMS&REQUEST=GetCapabilities";
+						}
 	                }
 	                if (url){
 	                    var request:URLRequest = new URLRequest(url);
@@ -558,8 +589,7 @@
 			protected function collapse_clickHandler():void
 			{
 				var _tocRoots:ArrayCollection = _toc.dataProvider as ArrayCollection;
-				for (var i:int = 0; i < _tocRoots.length - 1; i++)
-				{
+				for (var i:int = 0; i < _tocRoots.length - 1; i++){
 					const item:TocItem = _tocRoots[i];
 					collapseAll(item);
 					_tocRoots.refresh();
@@ -570,8 +600,7 @@
 			protected function expand_clickHandler():void
 			{
 				const _tocRoots:ArrayCollection = _toc.dataProvider as ArrayCollection; 
-				for (var i:int = 0; i < _tocRoots.length - 1; i++)
-				{
+				for (var i:int = 0; i < _tocRoots.length - 1; i++){
 					const item:TocItem = _tocRoots[i];
 					expandAll(item);
 					_tocRoots.refresh();
@@ -622,11 +651,22 @@
 					}
 				}
 			}
+			
+			protected function geometryService_faultHandler(event:FaultEvent):void
+			{
+				if(event.message){
+					trace(event.message.toString());
+				}else{
+					trace(event.fault.toString());
+				}
+			}
+			
 		]]>
     </fx:Script>
     <fx:Declarations>
         <esri:GeometryService id="geometryService"
                               projectComplete="geometryService_projectCompleteHandler(event)"
+							  fault="geometryService_faultHandler(event)"
                               url="http://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"/>
     </fx:Declarations>
     <s:layout>

@@ -27,7 +27,6 @@
         <![CDATA[
             import flashx.textLayout.formats.TextAlign;
             
-            import mx.events.EffectEvent;
             import mx.events.FlexEvent;
 
             private const MENU_ITEM_CLICK:String = "menuItemClick";

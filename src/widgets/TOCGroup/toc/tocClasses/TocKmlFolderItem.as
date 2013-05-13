@@ -11,34 +11,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 package widgets.TOCGroup.toc.tocClasses
 {
-
 	import com.esri.ags.layers.KMLLayer;
 	import com.esri.ags.layers.supportClasses.KMLFolder;
-	
-	import com.esri.ags.events.ExtentEvent;
-	import com.esri.ags.geometry.Extent;
-	
-	import flash.display.Bitmap;
-	import flash.display.BitmapData;
-	import flash.display.Loader;
-	import flash.events.Event;
-	import flash.system.LoaderContext;
-	import flash.utils.ByteArray;
-	
-	import mx.containers.HBox;
-	import mx.containers.VBox;
-	import mx.controls.Image;
-	import mx.core.FlexGlobals;
-	import mx.core.UIComponent;
-	import mx.events.FlexEvent;
-	import mx.utils.Base64Decoder;
 	
 	import spark.components.Group;
 	import spark.components.HGroup;
 	import spark.components.Label;
 	import spark.components.VGroup;
-	import spark.primitives.BitmapImage;
-	import com.esri.viewer.ViewerContainer;
 	
 	/**
 	 * A TOC item representing folder of a KML Layer.
@@ -54,8 +33,6 @@ package widgets.TOCGroup.toc.tocClasses
 	        label = folder.name;
 	
 	        setVisible(folder.visible, false);
-			
-			ViewerContainer.getInstance().mapManager.map.addEventListener(ExtentEvent.EXTENT_CHANGE,checkExtent);
 	    }
 	
 	    //--------------------------------------------------------------------------
@@ -86,59 +63,6 @@ package widgets.TOCGroup.toc.tocClasses
 	        return _layer;
 	    }
 		
-		internal static const DEFAULT_MAX:Number = 0;
-		
-		private var _maxScale:Number = DEFAULT_MAX;
-		
-		public function set maxScale( value:Number ):void
-		{
-			_maxScale = value;
-			this.scaledependant = true;
-			
-			if(_maxScale > 0 && _minScale > 0){
-				if ((ViewerContainer.getInstance().mapManager.map.scale >= _maxScale) &&
-					(ViewerContainer.getInstance().mapManager.map.scale <= _minScale)){
-					this.scaledependant = false;
-				}			
-			} else if (_maxScale > 0 ){
-				if ((ViewerContainer.getInstance().mapManager.map.scale >= _maxScale)){
-					this.scaledependant = false;
-				}
-			} else if (_minScale > 0 ) {
-				if ((ViewerContainer.getInstance().mapManager.map.scale <= _minScale)){
-					this.scaledependant = false;
-				}
-			} else {
-				this.scaledependant = false;
-			}
-		}
-		
-		public function get maxScale():Number
-		{
-			return _maxScale;
-		}
-		
-		private function checkExtent(evt:ExtentEvent):void{
-			this.scaledependant = true;
-			
-			if(_maxScale > 0 && _minScale > 0){
-				if ((ViewerContainer.getInstance().mapManager.map.scale >= _maxScale) &&
-					(ViewerContainer.getInstance().mapManager.map.scale <= _minScale)){
-					this.scaledependant = false;
-				}			
-			} else if (_maxScale > 0 ){
-				if ((ViewerContainer.getInstance().mapManager.map.scale >= _maxScale)){
-					this.scaledependant = false;
-				}
-			} else if (_minScale > 0 ) {
-				if ((ViewerContainer.getInstance().mapManager.map.scale <= _minScale)){
-					this.scaledependant = false;
-				}
-			} else {
-				this.scaledependant = false;
-			}
-		}
-		
 		private function getTocMapItem(tocItem:TocItem):TocMapLayerItem
 		{
 			const tocMapItem:TocMapLayerItem = tocItem as TocMapLayerItem;
@@ -151,52 +75,6 @@ package widgets.TOCGroup.toc.tocClasses
 				return getTocMapItem(tocItem.parent);
 			}
 			return null;
-		}
-		
-		internal static const DEFAULT_MIN:Number = 0;
-		
-		private var _minScale:Number = DEFAULT_MIN;
-		
-		public function set minScale( value:Number ):void
-		{
-			_minScale = value;
-			this.scaledependant = true;
-			
-			if(_maxScale > 0 && _minScale > 0){
-				if ((ViewerContainer.getInstance().mapManager.map.scale >= _maxScale) &&
-					(ViewerContainer.getInstance().mapManager.map.scale <= _minScale)){
-					this.scaledependant = false;
-				}			
-			} else if (_maxScale > 0 ){
-				if ((ViewerContainer.getInstance().mapManager.map.scale >= _maxScale)){
-					this.scaledependant = false;
-				}
-			} else if (_minScale > 0 ) {
-				if ((ViewerContainer.getInstance().mapManager.map.scale <= _minScale)){
-					this.scaledependant = false;
-				}
-			} else {
-				this.scaledependant = false;
-			}
-		}
-		
-		public function get minScale():Number
-		{
-			return _minScale;
-		}
-		
-		internal static const DEFAULT_EXT:Extent = new Extent();
-		
-		private var _layerExtent:Extent = DEFAULT_EXT;
-		
-		public function set layerExtent( value:Extent ):void
-		{
-			_layerExtent = value;
-		}
-		
-		public function get layerExtent():Extent
-		{
-			return _layerExtent;
 		}
 	
 	    //--------------------------------------------------------------------------
@@ -248,50 +126,49 @@ package widgets.TOCGroup.toc.tocClasses
 			return null;
 		}
 		
-		public function addLegendClasses(vbox:VBox):void
+		public function addLegendClasses(vGroup:VGroup):void
 		{
 			const tocMapItem:TocMapLayerItem = getTocMapItem(parent);
 			const legendInfo:LegendDataItem = tocMapItem.getLegendDataByLayerName(_layer.id);
-			if (legendInfo)
-			{
-				if (legendInfo.legendGroup.length > 0)
-				{
-					for (var lc:int = 0; lc < legendInfo.legendGroup.length; lc++)
-					{
+			if (legendInfo){
+				if (legendInfo.legendGroup.length > 0){
+					for (var lc:int = 0; lc < legendInfo.legendGroup.length; lc++){
 						const legendClass:LegendDataClassItem = legendInfo.legendGroup[lc];
-						if (legendClass.symbolitems.length > 0)
-						{
-							for each (var lsi:LegendSymbolItem in legendClass.symbolitems)
-							{
-								const hbox2:HBox = new HBox();
-								hbox2.setStyle("horizontalGap", 2);
-								hbox2.setStyle("verticalAlign", "middle");
+						if (legendClass.symbolitems.length > 1){
+							for each (var lsi:LegendSymbolItem in legendClass.symbolitems){
+								const uicGroup:Group = new Group();
+								uicGroup.width = 30;
+								uicGroup.height = 18;
+								const hGroup2:HGroup = new HGroup();
+								hGroup2.gap = 2;
+								hGroup2.verticalAlign = "middle";
 								
 								const lbl2:Label = new Label();
 								lbl2.setStyle("fontWeight", "normal");
 								
 								lbl2.text = lsi.label;
 								if(lsi.image){
-									hbox2.addChild(lsi.image);
-								}else if(lsi.uic){
-									hbox2.addChild(lsi.uic);
+									uicGroup.addElement(lsi.uic);
+									hGroup2.addElement(uicGroup);
+								}else{
+									hGroup2.addElement(lsi.uic);
 								}
-								hbox2.addChild(lbl2);
-								vbox.addChild(hbox2);
+								hGroup2.addElement(lbl2);
+								vGroup.addElement(hGroup2);
 							}
 						}else if (legendInfo.legendGroup.length > 1){
-							const hbox:HBox = new HBox();
-							hbox.setStyle("horizontalGap", 2);
-							hbox.setStyle("verticalAlign", "middle");
+							const hGroup:HGroup = new HGroup();
+							hGroup.gap = 2;
+							hGroup.verticalAlign = "middle";
 							
 							const lbl:Label = new Label();
 							lbl.setStyle("fontWeight", "normal");
 							
 							lbl.text = legendClass.label;
-							hbox.addChild(legendClass.image);
+							hGroup.addElement(legendClass.image);
 							
-							hbox.addChild(lbl);
-							vbox.addChild(hbox);
+							hGroup.addElement(lbl);
+							vGroup.addElement(hGroup);
 						}
 					}
 				}

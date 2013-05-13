@@ -1,6 +1,5 @@
 TOC Group Widget for Flex Viewer 3.1
 
-- Based of TOC Widget for Flex Viewer 3.1
 - Compiled version in Compiled folder
 
 Add this into the main config file:
@@ -8,4 +7,4 @@ Add this into the main config file:
         <widget label="Layers" right="10" bottom="10" preload="open"
                 icon="assets/images/Legend32.png"
                 config="widgets/TOCGroup/TOCGroupWidget.xml"
-                url="widgets/TOCGroup/TOCGroupWidget.swf"/>  
+                url="widgets/TOCGroup/TOCGroupWidget.swf"/> 
