@@ -176,17 +176,17 @@
 				
 				var menuItem_zsd:MenuItem = new MenuItem;
 				menuItem_zsd.id = "zoomtoscaledependant";
-				menuItem_zsd.icon = "widgets/TOC/assets/images/LayerZoomToScale16.png";
+				menuItem_zsd.icon = "widgets/TOCGroup/assets/images/LayerZoomToScale16.png";
 				menuItem_zsd.isGroup = false;
 				
 				var menuItem_ca:MenuItem = new MenuItem;
 				menuItem_ca.id = "collapse";
-				menuItem_ca.icon = "widgets/TOC/assets/images/LayerCollapse16.png";
+				menuItem_ca.icon = "widgets/TOCGroup/assets/images/LayerCollapse16.png";
 				menuItem_ca.isGroup = true;
 				
 				var menuItem_ea:MenuItem = new MenuItem;
 				menuItem_ea.id = "expand";
-				menuItem_ea.icon = "widgets/TOC/assets/images/LayerExpand16.png";
+				menuItem_ea.icon = "widgets/TOCGroup/assets/images/LayerExpand16.png";
 				menuItem_ea.isGroup = false;
 				
 				if (parent is TOC){
