@@ -77,8 +77,10 @@
 			
 			[Bindable] private var Themes:String;
 			
-			private var layerLoadCount:int = 0;
-			
+			// Layers loaded variables
+			private var layersLoaded:Number = 0;
+			private var numberOfLayers:Number
+
             private function init():void
             {				
                 if (configXML){
@@ -97,24 +99,32 @@
 				
 				// Check the map and all layers are loaded
 				if (map.loaded) {
-					var layersLoaded:Number = 1;
-					var numberOfLayers:Number = map.layerIds.length;
-					
-					// If all layers are not loaded yet, continue to check until they are
-					while (layersLoaded < numberOfLayers)
+					numberOfLayers = map.layerIds.length;					
+					// Go through all layers until last one then go to next function
+					for each (var id:String in map.layerIds)
 					{
-						// For each layer in map
-						for each (var id:String in map.layerIds)
+						var layer:Layer = map.getLayer(id);
+						// If loaded then add number to layers loaded
+						if (layer.loaded)
 						{
-							var layer:Layer = map.getLayer(id);
-							// If loaded then add number to layers loaded
-							if (layer.loaded)
-							{
+							layersLoaded++;
+						}
+						// Otherwise add handler for when layer has loaded
+						else {
+							layer.addEventListener(LayerEvent.LOAD, function(event:LayerEvent):void{
 								layersLoaded++;
-							}
-						}	
+								// If all layers loaded
+								if (layersLoaded == numberOfLayers) {
+									loadLayers();
+								}
+							});
+						}
+						
+						// If all layers loaded
+						if (layersLoaded == numberOfLayers) {
+							loadLayers();
+						}
 					}	
-					loadLayers();
 				}
             }
 			
@@ -215,7 +225,7 @@
 		]]>
     </fx:Script>
     <viewer:WidgetTemplate id="wTemplate"
-						   height="380"
+						   height="420"
 						   skinClass="com.esri.viewer.skins.WidgetTemplateSkin"
 						   width="360">
 		<s:Group height="100%" width="100%">
