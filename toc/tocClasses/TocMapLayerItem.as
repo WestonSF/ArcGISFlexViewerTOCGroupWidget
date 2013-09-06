@@ -39,6 +39,8 @@ package widgets.TOCGroup.toc.tocClasses
 	import com.esri.ags.symbols.SimpleLineSymbol;
 	import com.esri.ags.symbols.SimpleMarkerSymbol;
 	import com.esri.ags.utils.JSONUtil;
+	import com.esri.viewer.AppEvent;
+	import com.esri.viewer.BaseWidget;
 	import com.esri.viewer.ViewerContainer;
 	import com.esri.viewer.utils.MapServiceUtil;
 	
@@ -52,6 +54,7 @@ package widgets.TOCGroup.toc.tocClasses
 	
 	import mx.binding.utils.ChangeWatcher;
 	import mx.collections.ArrayCollection;
+	import mx.controls.Alert;
 	import mx.core.FlexGlobals;
 	import mx.events.CollectionEvent;
 	import mx.events.FlexEvent;
@@ -76,25 +79,26 @@ package widgets.TOCGroup.toc.tocClasses
 	 */
 	public class TocMapLayerItem extends TocItem
 	{
-	    private var _isMSOnly:Boolean = false;
+		private var _isMSOnly:Boolean = false;
 		private var _isVisibleLayersSet:Boolean = false;
 		private var _layer:Layer;
 		private var _labelFunction:Function;
 		private var _visibleLayersChangeWatcher:ChangeWatcher;
 		private var _dynamicMapServiceLayerInfos:Array;
-	
-	    public function TocMapLayerItem(layer:Layer, labelFunction:Function = null, isMapServiceOnly:Boolean = false, excludedLayers:ArrayCollection = null, iscollapsed:Boolean = false, _metatooltip:String = "", isdisableZoomTo:Boolean = false)
-	    {
-	        super();
+		private var configXML:XML;
+		
+		public function TocMapLayerItem(layer:Layer, labelFunction:Function = null, isMapServiceOnly:Boolean = false, excludedLayers:ArrayCollection = null, iscollapsed:Boolean = false, _metatooltip:String = "", isdisableZoomTo:Boolean = false)
+		{
+			super();
 			_legendData = new ArrayCollection([]);
-	        _layer = layer;
+			_layer = layer;
 			_map = ViewerContainer.getInstance().mapManager.map;
 			collapsed =_iscollapsed = iscollapsed;
 			disableZoomTo = _disableZoomTo = isdisableZoomTo;
 			_excludedLayers = excludedLayers;
-	        _isMSOnly = isMapServiceOnly;
-	        // Set the initial visibility without causing a layer refresh
-	        setVisible(layer.visible, false);
+			_isMSOnly = isMapServiceOnly;
+			// Set the initial visibility without causing a layer refresh
+			setVisible(layer.visible, false);
 			// Indicate whether the item is in scale range without causing a layer refresh
 			setIsInScaleRange(layer.isInScaleRange, false);
 			
@@ -108,16 +112,16 @@ package widgets.TOCGroup.toc.tocClasses
 					i++;
 				}
 			}
-	
-	        if (labelFunction == null){
-	            labelFunction = MapUtil.labelLayer;
+			
+			if (labelFunction == null){
+				labelFunction = MapUtil.labelLayer;
 			}
 			
-	        _labelFunction = labelFunction;
-	        label = labelFunction(layer);
-	
-	        if (!isMapServiceOnly){
-	            if (layer.loaded){
+			_labelFunction = labelFunction;
+			label = labelFunction(layer);
+			
+			if (!isMapServiceOnly){
+				if (layer.loaded){
 					minScale = layer.minScale;
 					maxScale = layer.maxScale;
 					if (layer is FeatureLayer){
@@ -126,10 +130,10 @@ package widgets.TOCGroup.toc.tocClasses
 						maxScale = fl.layerDetails.maxScale;
 						layerExtent = fl.layerDetails.extent;
 					}
-	                createChildren();
+					createChildren();
 					layer.map.addEventListener(ExtentEvent.EXTENT_CHANGE, onExtentChange, false, 0, true);
-	            }
-	        }
+				}
+			}
 			if(!layer.loaded && layer.loadFault){
 				FlexGlobals.topLevelApplication.dispatchEvent(new Event("legendDataLoaded$"));
 			}else if (opLayers.length == 0){
@@ -137,15 +141,15 @@ package widgets.TOCGroup.toc.tocClasses
 			}else if(!layer.loaded && layer.name == "dummy"){
 				FlexGlobals.topLevelApplication.dispatchEvent(new Event("legendDataLoaded$"));
 			}
-	
-	        // Listen for future layer load events
-	        layer.addEventListener(LayerEvent.LOAD, onLayerLoad, false, 0, true);
-	
-	        // Listen for changes in layer visibility
-	        layer.addEventListener(FlexEvent.SHOW, onLayerShow, false, 0, true);
-	        layer.addEventListener(FlexEvent.HIDE, onLayerHide, false, 0, true);
+			
+			// Listen for future layer load events
+			layer.addEventListener(LayerEvent.LOAD, onLayerLoad, false, 0, true);
+			
+			// Listen for changes in layer visibility
+			layer.addEventListener(FlexEvent.SHOW, onLayerShow, false, 0, true);
+			layer.addEventListener(FlexEvent.HIDE, onLayerHide, false, 0, true);
 			layer.addEventListener(LayerEvent.IS_IN_SCALE_RANGE_CHANGE, onScaleChange, false, 0, true);
-	    }
+		}
 		
 		private var _legendDataLoaded:Boolean;
 		
@@ -163,18 +167,18 @@ package widgets.TOCGroup.toc.tocClasses
 		
 		[Bindable]
 		private var lTimeout:int = 60;
-	
-	    //--------------------------------------------------------------------------
-	    //  Property:  mapLayer
-	    //--------------------------------------------------------------------------
-	
-	    /**
-	     * The map layer to which this TOC item is attached.
-	     */
-	    public function get layer():Layer
-	    {
-	        return _layer;
-	    }
+		
+		//--------------------------------------------------------------------------
+		//  Property:  mapLayer
+		//--------------------------------------------------------------------------
+		
+		/**
+		 * The map layer to which this TOC item is attached.
+		 */
+		public function get layer():Layer
+		{
+			return _layer;
+		}
 		
 		public function getLegendDataByLayerID(layerID:int):LegendDataItem
 		{
@@ -200,12 +204,12 @@ package widgets.TOCGroup.toc.tocClasses
 		{
 			return _legendData;
 		}
-	
-	    /**
-	     * @private
-	     */
-	    override internal function refreshLayer():void
-	    {
+		
+		/**
+		 * @private
+		 */
+		override internal function refreshLayer():void
+		{
 			layer.visible = visible;
 			
 			// ArcIMS requires layer names, whereas ArcGIS Server requires layer IDs
@@ -225,7 +229,7 @@ package widgets.TOCGroup.toc.tocClasses
 			}else if (layer is ArcIMSMapServiceLayer){
 				ArcIMSMapServiceLayer(layer).visibleLayers = new ArrayCollection(visLayers);
 			}			
-	    }
+		}
 		
 		public function manualRefresh():void
 		{
@@ -268,7 +272,7 @@ package widgets.TOCGroup.toc.tocClasses
 				item.visible = actualVisibleLayers.indexOf(item.layerInfo.layerId) != -1;
 			}
 		}
-	
+		
 		private function accumVisibleLayers(item:TocItem, accum:Array, useLayerInfoName:Boolean = false):void
 		{
 			if (item.isGroupLayer()){
@@ -291,12 +295,12 @@ package widgets.TOCGroup.toc.tocClasses
 				}
 			}
 		}
-	
-	    private function onLayerLoad(event:LayerEvent):void
-	    {
-	        // Re-label this item, since map layer URL or service name might have changed.
-	        label = _labelFunction(layer);
-	        if (!_isMSOnly){
+		
+		private function onLayerLoad(event:LayerEvent):void
+		{
+			// Re-label this item, since map layer URL or service name might have changed.
+			label = _labelFunction(layer);
+			if (!_isMSOnly){
 				minScale = layer.minScale;
 				maxScale = layer.maxScale;
 				if (layer is FeatureLayer){
@@ -305,10 +309,10 @@ package widgets.TOCGroup.toc.tocClasses
 					maxScale = fl.layerDetails.maxScale;
 					layerExtent = fl.layerDetails.extent;
 				}
-	            createChildren();
+				createChildren();
 				layer.map.addEventListener(ExtentEvent.EXTENT_CHANGE, onExtentChange, false, 0, true);
-	        }
-	    }
+			}
+		}
 		
 		private function getLegendData(m_layer:*):void
 		{
@@ -575,7 +579,7 @@ package widgets.TOCGroup.toc.tocClasses
 						}
 						layName.legendGroup.push(lClass2);
 					}
-
+					
 					if(lDetails.drawingInfo.renderer is com.esri.ags.renderers.ClassBreaksRenderer){
 						const cb:ClassBreaksRenderer = lDetails.drawingInfo.renderer as ClassBreaksRenderer;
 						var lClass3:LegendDataClassItem = new LegendDataClassItem();
@@ -647,18 +651,18 @@ package widgets.TOCGroup.toc.tocClasses
 				const loader:Loader = new Loader();
 				const lc:LoaderContext = new LoaderContext(false);
 				loader.contentLoaderInfo.addEventListener(Event.COMPLETE,
-				function(e:Event):void
-				{ 
-					if(rend is LegendItemInfo){
-						image.maxHeight = 30;
-						image.maxWidth = 30;
-					}
-					image.smooth = true;
-					image.source = e.currentTarget.content;
-					image.rotation = rend.symbol.angle;
-					image.height = rend.symbol.height;
-					image.width = rend.symbol.width;
-				});
+					function(e:Event):void
+					{ 
+						if(rend is LegendItemInfo){
+							image.maxHeight = 30;
+							image.maxWidth = 30;
+						}
+						image.smooth = true;
+						image.source = e.currentTarget.content;
+						image.rotation = rend.symbol.angle;
+						image.height = rend.symbol.height;
+						image.width = rend.symbol.width;
+					});
 				
 				var match:Array = rend.symbol.source.toString().match(/^\s*((https?|ftp):\/\/\S+)\s*$/i);
 				if (match && match.length > 0){
@@ -849,11 +853,40 @@ package widgets.TOCGroup.toc.tocClasses
 			}
 			FlexGlobals.topLevelApplication.dispatchEvent(new Event("legendDataLoaded$"));
 		}
-	
-	    private function onLayerShow(event:FlexEvent):void
-	    {
-	        setVisible(layer.visible, true);
-	    }
+		
+		// When layer turned on
+		private function onLayerShow(event:FlexEvent):void
+		{
+			// Load the config
+			configXML = ViewerContainer.getInstance().widgetManager.getWidget(ViewerContainer.getInstance().widgetManager.getWidgetId("Layers")).configXML;
+			
+			var Themes:String = configXML.themes;
+			var ThemesArray:Array = Themes.split(",");
+			var count:int = 0;
+			// Go through all the themes
+			while (ThemesArray.length > count) {	
+				var includeList:XMLList = configXML.includelayers.(@theme == ThemesArray[count]).includelayer;
+				// Go through all the map services in the themes
+				for (var j:Number = 0; j < includeList.length(); j++){				
+					// Get the map service name
+					var mapservicename:String = includeList[j].@mapservice;
+					// If the map service is the one selected
+					if (mapservicename == layer.id) {
+						// Check if widget attribute is set
+						var widget:String = includeList[j].@widget;
+						if (widget) {
+							// Get the widget id
+							var widgetId:Number = ViewerContainer.getInstance().widgetManager.getWidgetId(widget)
+							// Open the widget
+							AppEvent.dispatch(AppEvent.WIDGET_RUN, widgetId)
+						}					
+					}
+				}
+				count++;
+			}
+			// Turn on layer
+			setVisible(layer.visible, true);
+		}
 		
 		private function filterOutSubLayer(layer:Layer, id:int):Boolean
 		{
@@ -876,30 +909,59 @@ package widgets.TOCGroup.toc.tocClasses
 			}
 			return exclude;
 		}
-	
-	    private function onLayerHide(event:FlexEvent):void
-	    {
-	        setVisible(layer.visible, true);
-	    }
+		
+		// When layer turned off
+		private function onLayerHide(event:FlexEvent):void
+		{
+			// Load the config
+			configXML = ViewerContainer.getInstance().widgetManager.getWidget(ViewerContainer.getInstance().widgetManager.getWidgetId("Layers")).configXML;
+			
+			var Themes:String = configXML.themes;
+			var ThemesArray:Array = Themes.split(",");
+			var count:int = 0;
+			// Go through all the themes
+			while (ThemesArray.length > count) {	
+				var includeList:XMLList = configXML.includelayers.(@theme == ThemesArray[count]).includelayer;
+				// Go through all the map services in the themes
+				for (var j:Number = 0; j < includeList.length(); j++){				
+					// Get the map service name
+					var mapservicename:String = includeList[j].@mapservice;
+					// If the map service is the one selected
+					if (mapservicename == layer.id) {
+						// Check if widget attribute is set
+						var widget:String = includeList[j].@widget;
+						if (widget) {
+							// Get the widget id
+							var widgetId:Number = ViewerContainer.getInstance().widgetManager.getWidgetId(widget)
+							// Close the widget
+							AppEvent.dispatch(AppEvent.WIDGET_CLOSE, widgetId)
+						}					
+					}
+				}
+				count++;
+			}			
+			// Turn off layer
+			setVisible(layer.visible, true);
+		}
 		
 		private function onScaleChange(event:LayerEvent):void
 		{
 			setIsInScaleRange(layer.isInScaleRange, true);
 		}
-	
-	    /**
-	     * Populates this item's children collection based on any layer info
-	     * of the map service.
-	     */
-	    private function createChildren():void
-	    {
-	        children = null;
-	        var layerInfos:Array; // of LayerInfo
-	        var visibleLayers:Array;
+		
+		/**
+		 * Populates this item's children collection based on any layer info
+		 * of the map service.
+		 */
+		private function createChildren():void
+		{
+			children = null;
+			var layerInfos:Array; // of LayerInfo
+			var visibleLayers:Array;
 			var li:LayerInfo;
-	        if (layer is ArcGISTiledMapServiceLayer){
-	            layerInfos = ArcGISTiledMapServiceLayer(layer).layerInfos;
-	        }else if (layer is ArcGISDynamicMapServiceLayer){
+			if (layer is ArcGISTiledMapServiceLayer){
+				layerInfos = ArcGISTiledMapServiceLayer(layer).layerInfos;
+			}else if (layer is ArcGISDynamicMapServiceLayer){
 				var arcGISDynamicMapServiceLayer:ArcGISDynamicMapServiceLayer = ArcGISDynamicMapServiceLayer(layer);
 				//arcGISDynamicMapServiceLayer.visibleLayers.addEventListener(CollectionEvent.COLLECTION_CHANGE, visibleLayersChangeHandler);
 				_visibleLayersChangeWatcher = ChangeWatcher.watch(arcGISDynamicMapServiceLayer, "visibleLayers", visibleLayersChange);
@@ -921,8 +983,8 @@ package widgets.TOCGroup.toc.tocClasses
 					layerInfos = _dynamicMapServiceLayerInfos;
 				}
 			}else if (layer is ArcIMSMapServiceLayer){
-	            layerInfos = ArcIMSMapServiceLayer(layer).layerInfos;
-	        }else if (layer is KMLLayer){
+				layerInfos = ArcIMSMapServiceLayer(layer).layerInfos;
+			}else if (layer is KMLLayer){
 				createKMLLayerTocItems(this, KMLLayer(layer),_excludedLayers, _iscollapsed, _disableZoomTo);
 			}else if (layer is GeoRSSLayer){
 				layerInfos = [];
@@ -970,19 +1032,19 @@ package widgets.TOCGroup.toc.tocClasses
 				li.name = fl.layerDetails.name;
 				layerInfos = [li];
 			}
-	
-	        if (layerInfos){
-	            var rootLayers:Array = findRootLayers(layerInfos);
-	            for each (var layerInfo1:LayerInfo in rootLayers){
+			
+			if (layerInfos){
+				var rootLayers:Array = findRootLayers(layerInfos);
+				for each (var layerInfo1:LayerInfo in rootLayers){
 					var tlii2:TocLayerInfoItem = createTocLayer(this, layerInfo1, layerInfos, layerInfo1.defaultVisibility, isTocLayerInfoItemInScale(layerInfo1), layer, _excludedLayers, _iscollapsed, _disableZoomTo);
-	                if (tlii2){
+					if (tlii2){
 						addChild(tlii2);
 					}
-	            }
-	        }
+				}
+			}
 			
 			var timeout:uint = setTimeout(function():void{getLegendData(layer);}, 500);
-	    }
+		}
 		
 		private function onExtentChange(event:ExtentEvent):void
 		{
@@ -1055,29 +1117,29 @@ package widgets.TOCGroup.toc.tocClasses
 			}
 			return result;
 		}
-	
-	    private static function findRootLayers(layerInfos:Array):Array // of LayerInfo
-	    {
-	        var roots:Array = [];
-	        for each (var layerInfo:LayerInfo in layerInfos){
-	            // ArcGIS: parentLayerId is -1
-	            // ArcIMS: parentLayerId is NaN
-	            if (isNaN(layerInfo.parentLayerId) || layerInfo.parentLayerId == -1){
-	                roots.push(layerInfo);
+		
+		private static function findRootLayers(layerInfos:Array):Array // of LayerInfo
+		{
+			var roots:Array = [];
+			for each (var layerInfo:LayerInfo in layerInfos){
+				// ArcGIS: parentLayerId is -1
+				// ArcIMS: parentLayerId is NaN
+				if (isNaN(layerInfo.parentLayerId) || layerInfo.parentLayerId == -1){
+					roots.push(layerInfo);
 				}
-	        }
-	        return roots;
-	    }
-	
-	    private static function findLayerById(id:Number, layerInfos:Array):LayerInfo
-	    {
-	        for each (var layerInfo:LayerInfo in layerInfos){
-	            if (id == layerInfo.layerId){
-	                return layerInfo;
+			}
+			return roots;
+		}
+		
+		private static function findLayerById(id:Number, layerInfos:Array):LayerInfo
+		{
+			for each (var layerInfo:LayerInfo in layerInfos){
+				if (id == layerInfo.layerId){
+					return layerInfo;
 				}
-	        }
-	        return null;
-	    }
+			}
+			return null;
+		}
 		
 		private static function createKMLLayerTocItems(parentItem:TocItem, layer:KMLLayer, excludeLayers:ArrayCollection = null, iscollapsed:Boolean = false, isDisableZoomTo:Boolean = false):void
 		{
@@ -1101,7 +1163,7 @@ package widgets.TOCGroup.toc.tocClasses
 						}
 					}
 				}
-					
+				
 			}
 			function isTocLayerInfoItemInScale2(layerInfo:LayerInfo):Boolean
 			{
@@ -1165,17 +1227,17 @@ package widgets.TOCGroup.toc.tocClasses
 			}
 			return parentFolderFound;
 		}
-	
-	    private static function createTocLayer(parentItem:TocItem, layerInfo:LayerInfo, layerInfos:Array, isVisible:Boolean, isInScaleRange:Boolean, tlayer:Layer, excludeLayers:ArrayCollection, iscollapsed:Boolean, isdisableZoomTo:Boolean):TocLayerInfoItem
-	    {
-	        const item:TocLayerInfoItem = new TocLayerInfoItem(parentItem, layerInfo, isVisible, isInScaleRange);
+		
+		private static function createTocLayer(parentItem:TocItem, layerInfo:LayerInfo, layerInfos:Array, isVisible:Boolean, isInScaleRange:Boolean, tlayer:Layer, excludeLayers:ArrayCollection, iscollapsed:Boolean, isdisableZoomTo:Boolean):TocLayerInfoItem
+		{
+			const item:TocLayerInfoItem = new TocLayerInfoItem(parentItem, layerInfo, isVisible, isInScaleRange);
 			item.scroller = parentItem.scroller;
 			item.tocMinWidth = parentItem.tocMinWidth;
 			item.disableZoomTo = isdisableZoomTo;
 			item.collapsed = iscollapsed;
 			item.maxScale = layerInfo.maxScale;
 			item.minScale = layerInfo.minScale;
-
+			
 			function filterOutSubLayer(layer:Layer, id:int):Boolean{
 				var exclude:Boolean = false;
 				if (!exclude && excludeLayers){
@@ -1267,18 +1329,18 @@ package widgets.TOCGroup.toc.tocClasses
 				return result;
 			}
 			
-	        // Handle any sublayers of a group layer
-	        if (layerInfo.subLayerIds){
-	            for each (var childId:Number in layerInfo.subLayerIds){
-	                var childLayer:LayerInfo = findLayerById(childId, layerInfos);
-	                if (childLayer){
+			// Handle any sublayers of a group layer
+			if (layerInfo.subLayerIds){
+				for each (var childId:Number in layerInfo.subLayerIds){
+					var childLayer:LayerInfo = findLayerById(childId, layerInfos);
+					if (childLayer){
 						var tlii:TocLayerInfoItem = createTocLayer(item, childLayer, layerInfos, childLayer.defaultVisibility, item.isInScaleRange && isTocLayerInfoItemInScale2(childLayer), tlayer, excludeLayers, iscollapsed, isdisableZoomTo);
 						if (tlii) item.addChild(tlii);
-	                }
-	            }
-	        }
-	        return item;
-	    }
+					}
+				}
+			}
+			return item;
+		}
 		
 		private static function createKmlFolderTocItem(parentItem:TocItem, folder:KMLFolder, folders:Array, layer:KMLLayer, excludeLayers:ArrayCollection, iscollapsed:Boolean, disableZoomTo:Boolean):TocKmlFolderItem
 		{

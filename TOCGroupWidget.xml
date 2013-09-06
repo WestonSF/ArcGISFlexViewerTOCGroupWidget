@@ -28,7 +28,7 @@
 	</tocsettings>
 	<legendtimeout>60</legendtimeout>
 	
-	<!-- Set the themes and the services/layers to include from these themes -->
+	<!-- Set the themes and the services/layers to include from these themes - Widget label always needs to be "Layers" -->
 	<themes>Safety,Stats,All</themes>
 
 	<includelayers theme="Safety">
