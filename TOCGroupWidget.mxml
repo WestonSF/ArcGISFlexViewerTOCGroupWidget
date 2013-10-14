@@ -16,6 +16,7 @@
 			import com.esri.ags.events.MapEvent;
 			import com.esri.ags.layers.Layer;
 			import com.esri.viewer.AppEvent;
+			import com.esri.viewer.ViewerContainer;
 			
 			import flash.net.registerClassAlias;
 			
@@ -82,25 +83,26 @@
 			private var numberOfLayers:Number
 
             private function init():void
-            {				
+            {	
                 if (configXML){
 					ZoomToMakeVisible = configXML.labels.zoomtomakevisible || "Zoom To Make Visible";
 					ExpandAll = configXML.labels.expandall || "Expand All Layers";
 					CollapseAll = configXML.labels.collapseall || "Collapse All Layers";
-					layerVisibility = configXML.labels.visibilitylabel || getDefaultString("layerListTitle");;
+					layerVisibility = configXML.labels.visibilitylabel || getDefaultString("layerListTitle");
 					GeneratingLegendMsg = configXML.labels.generatinglegendmsg || "Generating TOC Legend";
 					expanded = configXML.tocsettings.expanded && configXML.tocsettings.expanded == "true";
 					disableZoomTo = configXML.tocsettings.disablezoomtomenuoption && configXML.tocsettings.disablezoomtomenuoption == "true";
 					if(expanded)
 						fullexpand = configXML.tocsettings.expanded.@everything[0] && configXML.tocsettings.expanded.@everything[0] == "true";
 					legendCollapsed = configXML.tocsettings.collapselegends && configXML.tocsettings.collapselegends == "true";
-					UseNewEsriDescrption = configXML.usenewesridescription && configXML.usenewesridescription == "true";				
+					UseNewEsriDescrption = configXML.usenewesridescription && configXML.usenewesridescription == "true";	
                 }
 				
-				// Check the map and all layers are loaded
-				if (map.loaded) {
-					numberOfLayers = map.layerIds.length;					
-					// Go through all layers until last one then go to next function
+				// Setup timer to wait for one second, so all layers will be loaded
+				var timer:Timer = new Timer(2000);
+				timer.addEventListener(TimerEvent.TIMER, function(event:TimerEvent):void{						
+					// Go through all layers until all loaded then go to next function
+					numberOfLayers = map.layerIds.length-1;
 					for each (var id:String in map.layerIds)
 					{
 						var layer:Layer = map.getLayer(id);
@@ -109,13 +111,15 @@
 						{
 							layersLoaded++;
 						}
-						// Otherwise add handler for when layer has loaded
+							// Otherwise add handler for when layer has loaded
 						else {
 							layer.addEventListener(LayerEvent.LOAD, function(event:LayerEvent):void{
 								layersLoaded++;
 								// If all layers loaded
 								if (layersLoaded == numberOfLayers) {
 									loadLayers();
+									// Stop the timer
+									timer.stop();	
 								}
 							});
 						}
@@ -123,9 +127,12 @@
 						// If all layers loaded
 						if (layersLoaded == numberOfLayers) {
 							loadLayers();
+							// Stop the timer
+							timer.stop();	
 						}
-					}	
-				}
+					}
+				});
+				timer.start();
             }
 			
 			private function loadLayers():void {				
@@ -139,7 +146,6 @@
 					// Iterate through each of the maps services adding to array
 					for (var i:Number = map.layerIds.length -1; i >= 0; i--)
 					{
-						// ISSUE - Sometimes all layers not loaded onto map yet
 						var layer:Layer = map.getLayer(map.layerIds[i]);
 						var name:String = layer.name;
 						var layerExclude:Object ={
