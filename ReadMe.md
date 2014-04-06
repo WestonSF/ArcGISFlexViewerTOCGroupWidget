@@ -22,10 +22,11 @@ on the TOC.
 
 * Fork and then clone the repo or download the .zip file. 
 * Add this into the main config file for the ArcGIS Flex Viewer:
-        * <widget label="Layers" right="10" bottom="10" preload="open"
+
+`<widget label="Layers" right="10" bottom="10" preload="open"
                 icon="assets/images/Legend32.png"
                 config="widgets/TOCGroup/TOCGroupWidget.xml"
-                url="widgets/TOCGroup/TOCGroupWidget.swf"/> 
+                url="widgets/TOCGroup/TOCGroupWidget.swf"/>` 
 
 
 ## Resources
